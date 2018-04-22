@@ -8,7 +8,7 @@
 #include <sys/msg.h>
 #include <sys/types.h>
 
-#define KEY_PATH "./main.c"
+#define KEY_PATH "./msgqueue.h"
 #define DEFAULT_PERM 0644
 
 /*
@@ -22,7 +22,7 @@ int msgq_create(int id) {
         return key;
     }
 
-    int msgid = msgget(key, IPC_CREAT | IPC_EXCL | DEFAULT_PERM)
+    int msgid = msgget(key, IPC_CREAT | IPC_EXCL | DEFAULT_PERM);
     if (msgid < 0) {
         perror("msgq_create: msgget");
     }
@@ -40,7 +40,7 @@ int msgq_getmsg(int id) {
         return key;
     }
 
-    int msgid = msgget(key, DEFAULT_PERM)
+    int msgid = msgget(key, DEFAULT_PERM);
     if (msgid < 0) {
         perror("msgq_getmsg: msgget");
     }
@@ -53,7 +53,7 @@ int msgq_getmsg(int id) {
  * mtype long.
  */
 int msgq_send(int msgid, const void *msgp, size_t msgsz) {
-    int r = msgsnd(msgid, msgp, msgsz - sizeof(long), NULL);
+    int r = msgsnd(msgid, msgp, msgsz - sizeof(long), 0);
     if (r < 0) {
         perror("msgq_send: msgsnd");
     }
@@ -65,7 +65,7 @@ int msgq_send(int msgid, const void *msgp, size_t msgsz) {
  * the provided mtype. The message is stored in msgp.
  */
 int msgq_recv(int msgid, void *msgp, size_t msgsz, long mtype) {
-    int r = msgrcv(msgid, msgp, msgsz - sizeof(long), mtype, NULL);
+    int r = msgrcv(msgid, msgp, msgsz - sizeof(long), mtype, 0);
     if (r < 0) {
         perror("msgq_recv: msgrcv");
     }
@@ -76,7 +76,7 @@ int msgq_recv(int msgid, void *msgp, size_t msgsz, long mtype) {
  * Attempts to destroy an IPC message queue with id _id_.
  */
 int msgq_destroy(int msgid) {
-    int r = msgctl(msgid, IPC_RMID, NULL);
+    int r = msgctl(msgid, IPC_RMID, 0);
     if (r < 0) {
         perror("msgq_destroy: msgctl");
     }
