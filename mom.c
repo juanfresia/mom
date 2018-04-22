@@ -47,8 +47,6 @@ int register_client() {
         return MOM_ERROR;
     }
 
-    /*
-    // TODO: Expect registration response
     if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
         return MOM_ERROR;
     }
@@ -57,7 +55,6 @@ int register_client() {
     if (msg.type != MSG_ACK_OK) {
         return MOM_ERROR;
     }
-    */
 
     // Return pid as id (TODO: change reading payload)
     return msg.mtype;
@@ -79,6 +76,15 @@ int subscribe(int id, char* topic) {
         return MOM_ERROR;
     }
     // TODO: Expect suscription ack
+
+    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
+        return MOM_ERROR;
+    }
+
+    // Assert message type is a correct ACK
+    if (msg.type != MSG_ACK_OK) {
+        return MOM_ERROR;
+    }
 
     return MOM_SUCCESS;
 }
@@ -109,6 +115,14 @@ int publish(int id, char* topic, char* message) {
         return MOM_ERROR;
     }
     // TODO: Expect publish ack
+    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
+        return MOM_ERROR;
+    }
+
+    // Assert message type is a correct ACK
+    if (msg.type != MSG_ACK_OK) {
+        return MOM_ERROR;
+    }
 
     return MOM_SUCCESS;
 }

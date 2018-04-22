@@ -14,13 +14,6 @@ void handle_message(socket_t* s, struct api_msg_t msg) {
     if (r < 0) {
         perror("handle_message: sock_send");
     }
-
-    r = SOCK_RECV(s, struct lb_msg_t, msg);
-    if (r < 0) {
-        perror("handle_message: sock_send");
-    }
-
-    printf("Received a message from broker of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg.type), msg.payload);
 }
 
 // Local broker deamon
@@ -33,10 +26,12 @@ int main(void) {
         _exit(-1);
     }
 
+    // Retrieve socket fd
     int sock_fd;
     sscanf(getenv("SOCKET_FD"), "%d", &sock_fd);
     socket_t* s = socket_create_from_fd(sock_fd, SOCK_ACTIVE);
 
+    // Loop poping messages from local broker queue and sending to broker
     struct api_msg_t msg = {0};
     int r;
     for (int i = 0; i < 10; i++) {
@@ -48,9 +43,8 @@ int main(void) {
         handle_message(s, msg);
     }
 
-    socket_destroy(s);
-
     // Cleanup
-    printf("Shutting down broker sender\n");
+    socket_destroy(s);
+    printf("Shutting down local broker sender\n");
     return 0;
 }

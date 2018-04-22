@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "lb.h"
 #include "server.h"
 
@@ -13,7 +14,9 @@ void handler(socket_t* s) {
         if (r < 0) {
             perror("server_handler: sock_recv");
         }
-        printf("I received a message! [%d, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
+        printf("I received a message! [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
+
+        msg.type = MSG_ACK_OK;
 
         r = SOCK_SEND(s, struct lb_msg_t, msg);
         if (r < 0) {

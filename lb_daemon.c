@@ -9,8 +9,6 @@
 #include "msgqueue.h"
 #include "socket.h"
 
-#define BUFFER_LEN 100
-
 // Local broker deamon
 int main(void) {
     printf("Starting broker deamon\n");
@@ -44,17 +42,26 @@ int main(void) {
         _exit(-1);
     }
 
-    // Launch process for send and receive to broker
+    // Set environment variable for socket FD
+    char buffer[BUFFER_LEN];
+    sprintf(buffer, "%d", socket_get_fd(s));
+    setenv(ENV_SOCKET_FD, buffer, 0);
 
+    // Launch process for sending and receiving to broker
     int pid = fork();
     if (pid < 0) {
-        perror("lb_daemon: fork");
+        perror("lb_daemon: sender fork");
     } else if (pid == 0) {
-        char buffer[BUFFER_LEN];
-        sprintf(buffer, "%d", socket_get_fd(s));
-        setenv("SOCKET_FD", buffer, 0);
-
         execl("lb_sender", "lb_sender", NULL);
+        perror("lb_daemon: execv");
+        _exit(-1);
+    }
+
+    pid = fork();
+    if (pid < 0) {
+        perror("lb_daemon: receiver fork");
+    } else if (pid == 0) {
+        execl("lb_receiver", "lb_receiver", NULL);
         perror("lb_daemon: execv");
         _exit(-1);
     }
