@@ -6,7 +6,7 @@
 #include "msgqueue.h"
 
 void handle_message(struct api_msg_t msg) {
-    printf("Received a message of type [%s]\n", MSG_TYPE_TO_STRING(msg.type));
+    printf("Received a message of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg.type), msg.payload);
 }
 
 // Local broker deamon
