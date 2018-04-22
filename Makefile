@@ -1,12 +1,15 @@
 CC= gcc
-CFLAGS= -g --std=c11 -Wall -Wextra --pedantic
+CFLAGS= -g --std=c11 -Wall -Wextra
+NON-MAIN= mom.c
+BINARIES= $(filter-out $(NON-MAIN), $(wildcard *.c))
 
-all: clean local_broker
+all: clean $(BINARIES:.c=)
 
-local_broker: local_broker.o msgqueue.h
-	$(CC) $(CFLAGS) $< -o $@
+client: client.c mom.o
+	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm -rf *.o local_broker
+	ipcrm -a
+	rm -rf *.o $(BINARIES:.c=)
 
 .PHONY: clean

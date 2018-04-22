@@ -2,6 +2,7 @@
 #define MSG_QUEUE_H
 
 // System V IPC message queue wrapper
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <sys/ipc.h>
