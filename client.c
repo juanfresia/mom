@@ -4,9 +4,10 @@
 // Local broker deamon
 int main(void) {
     printf("Starting client\n");
-    register_client();
+    int id = register_client();
 
-    subscribe(2, "placeholder");
+    subscribe(id, "placeholder");
+    publish(id, "placeholder", "Esto es un mensaje de prueba");
 
     printf("Shutting down client\n");
     return 0;

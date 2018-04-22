@@ -64,7 +64,6 @@ int register_client() {
 }
 
 int subscribe(int id, char* topic) {
-
     // Send subscription message
     struct api_msg_t msg = {0};
     msg.mtype = id;
@@ -72,7 +71,6 @@ int subscribe(int id, char* topic) {
 
     struct pyld_subs_t *payload = (struct pyld_subs_t*)&msg.payload;
     if (strlen(topic) >= MAX_TOPIC_LENGTH) {
-        // Topic too long
         return MOM_ERROR;
     }
     strcpy(payload->topic, topic);
@@ -91,8 +89,28 @@ int unsubscribe(int id, char* topic) {
 }
 
 int publish(int id, char* topic, char* message) {
-    printf("to be implemented\n");
-    return MOM_ERROR;
+    // Send subscription message
+    struct api_msg_t msg = {0};
+    msg.mtype = id;
+    msg.type = MSG_PUBLISH;
+
+    struct pyld_subs_t *payload = (struct pyld_subs_t*)&msg.payload;
+    if (strlen(topic) >= MAX_TOPIC_LENGTH) {
+        return MOM_ERROR;
+    }
+    strcpy(payload->topic, topic);
+
+    if (strlen(message) >= MAX_MESSAGE_LENGTH) {
+        return MOM_ERROR;
+    }
+    strcpy(payload->message, message);
+
+    if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
+        return MOM_ERROR;
+    }
+    // TODO: Expect publish ack
+
+    return MOM_SUCCESS;
 }
 
 int retrieve(int id, char* topic, char** msg_store) {

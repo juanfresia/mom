@@ -1,11 +1,15 @@
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "lb.h"
 #include "msgqueue.h"
+#include "socket.h"
+
+#define BUFFER_LEN 100
 
 // Local broker deamon
 int main(void) {
@@ -24,14 +28,34 @@ int main(void) {
     }
 
     // Attempt to connect to the broker server
+    socket_t* s = socket_create(SOCK_ACTIVE);
+    if (!s) {
+        perror("lb_daemon: socket_create");
+        msgq_destroy(sendq);
+        msgq_destroy(recvq);
+        _exit(-1);
+    }
+
+    if (socket_connect(s, "127.0.0.1", "12345") < 0) {
+        perror("lb_daemon: socket_connect");
+        socket_destroy(s);
+        msgq_destroy(sendq);
+        msgq_destroy(recvq);
+        _exit(-1);
+    }
 
     // Launch process for send and receive to broker
+
     int pid = fork();
     if (pid < 0) {
         perror("lb_daemon: fork");
     } else if (pid == 0) {
-        execl("lb_sender", "lb_sender");
-        perror("lb_daemon: execv:");
+        char buffer[BUFFER_LEN];
+        sprintf(buffer, "%d", socket_get_fd(s));
+        setenv("SOCKET_FD", buffer, 0);
+
+        execl("lb_sender", "lb_sender", NULL);
+        perror("lb_daemon: execv");
         _exit(-1);
     }
 
@@ -41,6 +65,7 @@ int main(void) {
 
     // Cleanup
     printf("Shutting down daemon\n");
+    socket_destroy(s);
     msgq_destroy(sendq);
     msgq_destroy(recvq);
     return 0;

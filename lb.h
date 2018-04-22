@@ -6,6 +6,7 @@
 
 #define MAX_PAYLOAD 1024
 #define MAX_TOPIC_LENGTH 100
+#define MAX_MESSAGE_LENGTH MAX_PAYLOAD-MAX_TOPIC_LENGTH
 
 enum mom_msg_type {
     MSG_REGISTER = 0,
@@ -50,7 +51,7 @@ struct api_msg_t {
 // MSG_SUBSCRIBE, MSG_UNSUBSCRIBE, MSG_PUBLISH, MSG_RETRIEVE
 struct pyld_subs_t {
     char topic[MAX_TOPIC_LENGTH];
-    char padding[MAX_PAYLOAD - MAX_TOPIC_LENGTH];
+    char message[MAX_MESSAGE_LENGTH];
 };
 
 // MSG_REGISTER
