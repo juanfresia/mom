@@ -36,7 +36,7 @@ int init_directories() {
     }
 
     char command[1024];
-    snprintf(command, sizeof(command), "mkdir -p %s", db_dir);
+    snprintf(command, sizeof(command), "mkdir -p %s %s/global %s/local", db_dir, db_dir, db_dir);
     printf("+ %s\n", command);
 
     int r = bash_exec(command);
@@ -49,7 +49,7 @@ int init_directories() {
 
 int set_local_id(long local_id, long global_id) {
     char command[1024];
-    snprintf(command, sizeof(command), "echo '%lu' > %s/%lu", local_id, db_dir, global_id);
+    snprintf(command, sizeof(command), "echo '%lu' > %s/local/%lu", local_id, db_dir, global_id);
     printf("+ %s\n", command);
 
     int r = bash_exec(command);
@@ -62,7 +62,7 @@ int set_local_id(long local_id, long global_id) {
 
 int get_local_id(long global_id) {
     char command[1024];
-    snprintf(command, sizeof(command), "cat %s/%lu", db_dir, global_id);
+    snprintf(command, sizeof(command), "cat %s/local/%lu", db_dir, global_id);
     printf("+ %s\n", command);
 
     char* output = bash_exec_output(command);
