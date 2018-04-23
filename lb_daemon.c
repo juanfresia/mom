@@ -18,6 +18,8 @@ int main(void) {
     set_local_id(10, 1003);
     set_local_id(11, 1241);
 
+    printf("%d\n", get_local_id(1003));
+
     // Create IPC queues for clients
     int sendq = msgq_create(LB_IPC_SEND_MQ);
     if (sendq < 0) {

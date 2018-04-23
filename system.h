@@ -50,6 +50,8 @@ char* bash_exec_output(const char *cmd) {
         bytes_read += tmp;
     } while(tmp > 0);
 
+    output[bytes_read] = '\0';
+
     waitpid(pid, 0, 0);
     close(pipes[0]);
 

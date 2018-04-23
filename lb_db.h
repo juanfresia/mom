@@ -52,11 +52,27 @@ int set_local_id(long local_id, long global_id) {
     snprintf(command, sizeof(command), "echo '%lu' > %s/%lu", local_id, db_dir, global_id);
     printf("+ %s\n", command);
 
+    int r = bash_exec(command);
+    if (r < 0) {
+        perror("lb_db: set_local_id");
+        return r;
+    }
+    return 0;
+}
+
+int get_local_id(long global_id) {
+    char command[1024];
+    snprintf(command, sizeof(command), "cat %s/%lu", db_dir, global_id);
+    printf("+ %s\n", command);
+
     char* output = bash_exec_output(command);
     if (!output) {
-        perror("lb_db: set_local_id");
+        perror("lb_db: get_local_id");
         return -1;
     }
+    int local_id = -1;
+    sscanf(output, "%d", &local_id);
     free(output);
-    return 0;
+
+    return local_id;
 }
