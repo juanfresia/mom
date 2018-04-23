@@ -6,12 +6,17 @@
 #include <sys/wait.h>
 
 #include "lb.h"
+#include "lb_db.h"
 #include "msgqueue.h"
 #include "socket.h"
 
 // Local broker deamon
 int main(void) {
     printf("Starting broker deamon\n");
+
+    init_directories();
+    set_local_id(10, 1003);
+    set_local_id(11, 1241);
 
     // Create IPC queues for clients
     int sendq = msgq_create(LB_IPC_SEND_MQ);
