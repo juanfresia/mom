@@ -15,16 +15,40 @@
 void handler(socket_t* s) {
     printf("A connection has arrived\n");
 
+    // Get IPC queues
+    int inq = msgq_getmsg(B_IPC_IN_MQ);
+    if (inq < 0) {
+        _exit(-1);
+    }
+    int outq = msgq_getmsg(B_IPC_OUT_MQ);
+    if (outq < 0) {
+        msgq_destroy(inq);
+        _exit(-1);
+    }
+
     struct lb_msg_t msg = {0};
     for (int i = 0; i < 10; i++) {
+        printf("Waiting for requests\n");
         int r = SOCK_RECV(s, struct lb_msg_t, msg);
         if (r < 0) {
             perror("server_handler: sock_recv");
         }
-        printf("I received a message! [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
 
-        msg.type = MSG_ACK_OK;
+        printf("I received a request [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
+        r = msgq_send(inq, &msg, sizeof(struct api_msg_t));
+        if (r < 0) {
+            perror("broker_processor: msgq_send");
+            continue;
+        }
 
+        printf("Waiting for response processing\n");
+        r = msgq_recv(outq, &msg, sizeof(struct api_msg_t), msg.global_id);
+        if (r < 0) {
+            perror("broker_processor: msgq_recv");
+            continue;
+        }
+
+        printf("I received a response [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
         r = SOCK_SEND(s, struct lb_msg_t, msg);
         if (r < 0) {
             perror("server_handler: sock_send");

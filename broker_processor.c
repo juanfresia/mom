@@ -1,13 +1,22 @@
 #define _POSIX_C_SOURCE 200112L // sigaction
+#define _GNU_SOURCE
 
 #include <signal.h>
 #include <stdio.h>
+#include <unistd.h>
 
+#include "lb.h"
+#include "msgqueue.h"
 
 static int quit = 0;
 
 void graceful_quit(int sig) {
 	quit = 1;
+}
+
+struct api_msg_t handle_message(struct api_msg_t req) {
+    req.type = MSG_ACK_OK;
+    return req;
 }
 
 int main(void) {
@@ -19,9 +28,32 @@ int main(void) {
 	sigaction(SIGTERM, &sa, NULL);
 	sigaction(SIGINT, &sa, NULL);
 
+    // Get IPC queues
+    int inq = msgq_getmsg(B_IPC_IN_MQ);
+    if (inq < 0) {
+        _exit(-1);
+    }
+    int outq = msgq_getmsg(B_IPC_OUT_MQ);
+    if (outq < 0) {
+        msgq_destroy(inq);
+        _exit(-1);
+    }
+
+    // Main work loop
+    struct api_msg_t req;
+    struct api_msg_t resp;
     while(!quit) {
-        printf("Broker processor says: I'm still alive!!\n");
-        sleep(3);
+        int r = msgq_recv(inq, &req, sizeof(struct api_msg_t), 0);
+        if (r < 0) {
+            perror("broker_processor: msgq_recv");
+            continue;
+        }
+        resp = handle_message(req);
+        r = msgq_send(outq, &resp, sizeof(struct api_msg_t));
+        if (r < 0) {
+            perror("broker_processor: msgq_send");
+            continue;
+        }
     }
 
     printf("Broker processor quits\n");
