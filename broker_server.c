@@ -26,6 +26,16 @@ void handler(socket_t* s) {
 }
 
 int main (int argc, char* argv[]) {
+    // Init broker processor queues
+
+    // Start broker processor
+
+    // Run server accepting connections
     run_server(SERVER_IP, SERVER_PORT, handler, SERVER_CONCURRENT);
+
+    // Server gracefully exited
+    // Gracefully kill children
+
+    // Free resources
     return 0;
 }
