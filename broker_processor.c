@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200112L // sigaction
 #define _GNU_SOURCE
 
 #include <signal.h>
@@ -8,9 +7,12 @@
 #include "lb.h"
 #include "msgqueue.h"
 
+#define UNUSED(x) (void)(x)
+
 static int quit = 0;
 
 void graceful_quit(int sig) {
+    UNUSED(sig);
 	quit = 1;
 }
 

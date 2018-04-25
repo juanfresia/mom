@@ -12,7 +12,8 @@
 
 static int quit = 0;
 
-void graceful_quit(int sig) {
+void graceful_quit(int sig __attribute__((unused))) {
+
 	quit = 1;
 }
 

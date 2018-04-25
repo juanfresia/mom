@@ -12,6 +12,8 @@
 int msgid_snd = -1;
 int msgid_rcv = -1;
 
+#define UNUSED(x) (void)(x)
+
 /*
  * Initialize IPC message queues.
  * Returns MOM_ERROR if an error occurs, MOM_SUCCESS otherwise.
@@ -90,6 +92,8 @@ int subscribe(int id, char* topic) {
 }
 
 int unsubscribe(int id, char* topic) {
+    UNUSED(id);
+    UNUSED(topic);
     printf("to be implemented\n");
     return MOM_ERROR;
 }
@@ -128,11 +132,15 @@ int publish(int id, char* topic, char* message) {
 }
 
 int retrieve(int id, char* topic, char** msg_store) {
+    UNUSED(id);
+    UNUSED(topic);
+    UNUSED(msg_store);
     printf("to be implemented\n");
     return MOM_ERROR;
 }
 
 int unregister(int id) {
+    UNUSED(id);
     printf("to be implemented\n");
     return MOM_ERROR;
 }

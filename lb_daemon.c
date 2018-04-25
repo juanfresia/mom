@@ -76,6 +76,7 @@ int main(void) {
         _exit(-1);
     }
 
+    // TODO: gracefully quit
     for (int i = 0; i < 2; i++) {
         wait(NULL);
     }

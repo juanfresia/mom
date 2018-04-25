@@ -56,7 +56,7 @@ void handler(socket_t* s) {
     }
 }
 
-int main (int argc, char* argv[]) {
+int main (void) {
     // Init broker processor queues
     int inq = msgq_create(B_IPC_IN_MQ);
     if (inq < 0) {
