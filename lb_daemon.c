@@ -14,11 +14,13 @@
 int main(void) {
     printf("Starting broker deamon\n");
 
+    // <testing>
     init_directories();
     set_local_id(10, 1003);
     set_local_id(11, 1241);
 
     printf("%d\n", get_local_id(1003));
+    // </testing>
 
     // Create IPC queues for clients
     int sendq = msgq_create(LB_IPC_SEND_MQ);
@@ -55,6 +57,7 @@ int main(void) {
     setenv(ENV_SOCKET_FD, buffer, 0);
 
     // Launch process for sending and receiving to broker
+    // TODO: cleanup
     int pid = fork();
     if (pid < 0) {
         perror("lb_daemon: sender fork");

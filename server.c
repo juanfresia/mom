@@ -40,8 +40,11 @@ void concurrent_handler(socket_t* s, handler_t callback, socket_t* orig) {
 }
 
 void run_server(char* ip, char* port, handler_t callback, server_type type) {
-	sigset(SIGTERM, graceful_quit);
-	sigset(SIGINT, graceful_quit);
+    // Setting signal handler for graceful_quit
+    struct sigaction sa = {0};
+    sa.sa_handler = graceful_quit;
+	sigaction(SIGTERM, &sa, NULL);
+	sigaction(SIGINT, &sa, NULL);
 
 	printf("Creating socket\n");
 	socket_t* s = socket_create(SOCK_PASSIVE);

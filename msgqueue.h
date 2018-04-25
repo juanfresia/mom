@@ -9,6 +9,7 @@
 #include <sys/msg.h>
 #include <sys/types.h>
 
+// TODO: make this customizable
 #define KEY_PATH "./msgqueue.h"
 #define DEFAULT_PERM 0644
 
