@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "broker_db.h"
 #include "lb.h"
 #include "msgqueue.h"
 
