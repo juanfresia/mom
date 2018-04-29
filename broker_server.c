@@ -1,7 +1,9 @@
 #define _GNU_SOURCE
+#define _POSIX_C_SOURCE 200112L // setenv()
 
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 
 #include "lb.h"
@@ -13,46 +15,37 @@
 #define SERVER_PORT "12345"
 
 void handler(socket_t* s) {
+    static int connection_id = 1;
     printf("A connection has arrived\n");
 
-    // Get IPC queues
-    int inq = msgq_getmsg(B_IPC_IN_MQ);
-    if (inq < 0) {
-        _exit(-1);
+    // Set environment variable for socket FD
+    char buffer[BUFFER_LEN];
+    sprintf(buffer, "%d", socket_get_fd(s));
+    setenv(ENV_SOCKET_FD, buffer, 1);
+
+    // Set environment variable for entrance/exit ID (mtype)
+    sprintf(buffer, "%d", connection_id);
+    setenv(ENV_CONNECTION_ID, buffer, 1);
+    connection_id++;
+
+    // Spawn broker entrance and exit for new connection
+    // TODO: cleanup
+    int pid = fork();
+    if (pid < 0) {
+        perror("broker_server: entrance fork");
+    } else if (pid == 0) {
+        execl("broker_entrance", "broker_entrance", NULL);
+        perror("broker_server: execv");
+        return;
     }
-    int outq = msgq_getmsg(B_IPC_OUT_MQ);
-    if (outq < 0) {
-        msgq_destroy(inq);
-        _exit(-1);
-    }
 
-    struct lb_msg_t msg = {0};
-    for (int i = 0; i < 10; i++) {
-        printf("Waiting for requests\n");
-        int r = SOCK_RECV(s, struct lb_msg_t, msg);
-        if (r < 0) {
-            perror("server_handler: sock_recv");
-        }
-
-        printf("I received a request [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
-        r = msgq_send(inq, &msg, sizeof(struct api_msg_t));
-        if (r < 0) {
-            perror("broker_processor: msgq_send");
-            continue;
-        }
-
-        printf("Waiting for response processing\n");
-        r = msgq_recv(outq, &msg, sizeof(struct api_msg_t), msg.global_id);
-        if (r < 0) {
-            perror("broker_processor: msgq_recv");
-            continue;
-        }
-
-        printf("I received a response [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
-        r = SOCK_SEND(s, struct lb_msg_t, msg);
-        if (r < 0) {
-            perror("server_handler: sock_send");
-        }
+    pid = fork();
+    if (pid < 0) {
+        perror("broker_server: exit fork");
+    } else if (pid == 0) {
+        execl("broker_exit", "broker_exit", NULL);
+        perror("broker_server: execv");
+        return;
     }
 }
 
@@ -80,7 +73,7 @@ int main (void) {
     }
 
     // Run server accepting connections
-    run_server(SERVER_IP, SERVER_PORT, handler, SERVER_CONCURRENT);
+    run_server(SERVER_IP, SERVER_PORT, handler, SERVER_ITERATIVE);
 
     // Server gracefully exited
     // Gracefully kill children

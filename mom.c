@@ -42,7 +42,7 @@ int register_client() {
     }
 
     // Send register message
-    struct api_msg_t msg = {0};
+    struct msg_t msg = {0};
     msg.mtype = getpid();
     msg.type = MSG_REGISTER;
     if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
@@ -64,15 +64,14 @@ int register_client() {
 
 int subscribe(int id, char* topic) {
     // Send subscription message
-    struct api_msg_t msg = {0};
+    struct msg_t msg = {0};
     msg.mtype = id;
     msg.type = MSG_SUBSCRIBE;
 
-    struct pyld_subs_t *payload = (struct pyld_subs_t*)&msg.payload;
     if (strlen(topic) >= MAX_TOPIC_LENGTH) {
         return MOM_ERROR;
     }
-    strcpy(payload->topic, topic);
+    strcpy(msg.topic, topic);
 
     if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
         return MOM_ERROR;
@@ -100,20 +99,19 @@ int unsubscribe(int id, char* topic) {
 
 int publish(int id, char* topic, char* message) {
     // Send subscription message
-    struct api_msg_t msg = {0};
+    struct msg_t msg = {0};
     msg.mtype = id;
     msg.type = MSG_PUBLISH;
 
-    struct pyld_subs_t *payload = (struct pyld_subs_t*)&msg.payload;
     if (strlen(topic) >= MAX_TOPIC_LENGTH) {
         return MOM_ERROR;
     }
-    strcpy(payload->topic, topic);
+    strcpy(msg.topic, topic);
 
-    if (strlen(message) >= MAX_MESSAGE_LENGTH) {
+    if (strlen(message) >= MAX_PAYLOAD) {
         return MOM_ERROR;
     }
-    strcpy(payload->message, message);
+    strcpy(msg.payload, message);
 
     if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
         return MOM_ERROR;

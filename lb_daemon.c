@@ -1,4 +1,6 @@
 #define _GNU_SOURCE
+
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,9 +12,24 @@
 #include "msgqueue.h"
 #include "socket.h"
 
+#define UNUSED(x) (void)(x)
+
+static int quit = 0;
+
+void graceful_quit(int sig) {
+    UNUSED(sig);
+	quit = 1;
+}
+
 // Local broker deamon
 int main(void) {
     printf("Starting broker deamon\n");
+
+    // Setting signal handler for graceful_quit
+    struct sigaction sa = {0};
+    sa.sa_handler = graceful_quit;
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
 
     // <testing>
     init_directories();
@@ -76,6 +93,10 @@ int main(void) {
         _exit(-1);
     }
 
+    while(!quit) {
+        pause();
+    }
+    
     // TODO: gracefully quit
     for (int i = 0; i < 2; i++) {
         wait(NULL);

@@ -7,6 +7,8 @@ all: clean $(BINARIES:.c=)
 
 client: client.c mom.o socket.o
 broker_server: broker_server.c socket.o server.o
+broker_entrance: broker_entrance.c socket.o
+broker_exit: broker_exit.c socket.o
 lb_daemon: lb_daemon.c socket.o
 lb_sender: lb_sender.c socket.o
 lb_receiver: lb_receiver.c socket.o

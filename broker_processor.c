@@ -16,7 +16,7 @@ void graceful_quit(int sig) {
 	quit = 1;
 }
 
-struct api_msg_t handle_message(struct api_msg_t req) {
+struct msg_t handle_message(struct msg_t req) {
     req.type = MSG_ACK_OK;
     return req;
 }
@@ -42,16 +42,16 @@ int main(void) {
     }
 
     // Main work loop
-    struct api_msg_t req;
-    struct api_msg_t resp;
+    struct msg_t req;
+    struct msg_t resp;
     while(!quit) {
-        int r = msgq_recv(inq, &req, sizeof(struct api_msg_t), 0);
+        int r = msgq_recv(inq, &req, sizeof(struct msg_t), 0);
         if (r < 0) {
             perror("broker_processor: msgq_recv");
             continue;
         }
         resp = handle_message(req);
-        r = msgq_send(outq, &resp, sizeof(struct api_msg_t));
+        r = msgq_send(outq, &resp, sizeof(struct msg_t));
         if (r < 0) {
             perror("broker_processor: msgq_send");
             continue;
