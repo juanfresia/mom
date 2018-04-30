@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#include "broker_db.h"
 #include "lb.h"
 #include "msgqueue.h"
 #include "proc.h"
@@ -50,6 +51,12 @@ void handler(socket_t* s) {
 }
 
 int main (void) {
+    // Init db
+    if (db_init() < 0) {
+        perror("broker_server: db_init");
+        _exit(-1);
+    }
+
     // Init broker processor queues
     int inq = msgq_create(B_IPC_IN_MQ);
     if (inq < 0) {
@@ -85,5 +92,8 @@ int main (void) {
     // Free resources
     msgq_destroy(inq);
     msgq_destroy(outq);
+
+    // Close db
+    db_close();
     return 0;
 }

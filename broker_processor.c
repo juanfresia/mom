@@ -18,7 +18,24 @@ void graceful_quit(int sig) {
 }
 
 struct msg_t handle_message(struct msg_t req) {
+    long *id_list;
+    if (req.type == MSG_SUBSCRIBE) {
+        printf("I received a subscribe\n");
+        if (db_subscribe(req.global_id, req.topic) < 0) {
+            req.type = MSG_ACK_ERROR;
+            return req;
+        }
+
+        int count = db_get_subscriptors(req.topic, &id_list);
+        printf("Subscribers list:");
+        while (count > 0) {
+            printf(" %ld", id_list[count]);
+            count--;
+        }
+        printf("\n");
+    }
     req.type = MSG_ACK_OK;
+
     return req;
 }
 

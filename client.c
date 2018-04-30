@@ -9,7 +9,12 @@ int main(void) {
         perror("client: register");
     }
 
-    int r = subscribe(id, "placeholder");
+    int r = subscribe(id, "topic1");
+    if (r < 0) {
+        perror("client: register");
+    }
+
+    r = subscribe(id, "topic1/topic2");
     if (r < 0) {
         perror("client: register");
     }

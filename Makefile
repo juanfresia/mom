@@ -6,7 +6,7 @@ BINARIES= $(filter-out $(NON-MAIN), $(wildcard *.c))
 all: clean $(BINARIES:.c=)
 
 client: client.c mom.o socket.o
-broker_server: broker_server.c socket.o server.o
+broker_server: broker_server.c socket.o server.o broker_db.o
 broker_processor: broker_processor.c broker_db.o
 broker_entrance: broker_entrance.c socket.o
 broker_exit: broker_exit.c socket.o
@@ -17,6 +17,6 @@ lb_receiver: lb_receiver.c socket.o
 
 clean:
 	ipcrm -a
-	rm -rf *.o $(BINARIES:.c=)
+	rm -rf *.o $(BINARIES:.c=) broker_data
 
 .PHONY: clean

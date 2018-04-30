@@ -53,7 +53,7 @@ int main(void) {
             _exit(-1);
         }
 
-        printf("I received a response [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
+        printf("I'm going to send a response [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
         r = SOCK_SEND(s, struct msg_t, msg);
         if (r < 0) {
             perror("server_handler: sock_send");
