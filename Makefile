@@ -17,6 +17,6 @@ lb_receiver: lb_receiver.c socket.o
 
 clean:
 	ipcrm -a
-	rm -rf *.o $(BINARIES:.c=) broker_data
+	rm -rf *.o $(BINARIES:.c=) broker_data lb_data
 
 .PHONY: clean
