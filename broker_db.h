@@ -6,6 +6,8 @@
 
  int db_init();
 
+long db_next_id();
+
  int db_subscribe(long id, char *topic);
 
  int db_unsubscribe(long id, char *topic);

@@ -23,6 +23,7 @@ enum mom_msg_type {
     MSG_PUBLISH,
     MSG_RETRIEVE,
     MSG_UNREGISTER,
+    MSG_NEW_ID,
     MSG_ACK_OK,
     MSG_ACK_ERROR,
     MSG_ENUM_LENGTH
@@ -34,6 +35,7 @@ const char* msg_type_string[MSG_ENUM_LENGTH] = {
     "publish",
     "read",
     "unregister",
+    "new_id",
     "ack_ok",
     "ack_error"
 };

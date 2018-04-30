@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "lb.h"
+#include "lb_db.h"
 #include "msgqueue.h"
 #include "socket.h"
 
@@ -21,7 +22,11 @@ void graceful_quit(int sig) {
 void handle_message(socket_t* s, struct msg_t msg) {
     printf("Received a message of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg.type), msg.payload);
 
-    msg.global_id = msg.mtype;
+    if (msg.type == MSG_REGISTER) {
+        msg.global_id = msg.mtype;
+    } else {
+        msg.global_id = get_global_id(msg.mtype);
+    }
     int r = SOCK_SEND(s, struct msg_t, msg);
     if (r < 0) {
         perror("handle_message: sock_send");

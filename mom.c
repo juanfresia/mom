@@ -49,17 +49,17 @@ int register_client() {
         return MOM_ERROR;
     }
 
-    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
+    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), 1) < 0) {
         return MOM_ERROR;
     }
 
     // Assert message type is a correct ACK
-    if (msg.type != MSG_ACK_OK) {
+    if (msg.type != MSG_NEW_ID) {
         return MOM_ERROR;
     }
 
     // Return pid as id (TODO: change reading payload)
-    return msg.mtype;
+    return msg.global_id;
 }
 
 int subscribe(int id, char* topic) {

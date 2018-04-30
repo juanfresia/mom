@@ -18,10 +18,7 @@
 
 #include "system.h"
 
-#define ENV_LB_DATABASE_DIR "LB_DATABASE_DIR"
-#define LB_DATABASE_DIR_DEFAULT "./lb_data"
-
-char* db_dir = NULL;
+char* db_dir = "lb_data";
 
 /*
  * Initialize local directories where to store the id mappings.
@@ -29,12 +26,6 @@ char* db_dir = NULL;
  * otherwise the value is defaulted to LB_DATABASE_DIR_DEFAULT.
  */
 int init_directories() {
-    db_dir = getenv(ENV_LB_DATABASE_DIR);
-    if (!db_dir) {
-        db_dir = LB_DATABASE_DIR_DEFAULT;
-        setenv(ENV_LB_DATABASE_DIR, db_dir, 0);
-    }
-
     char command[1024];
     snprintf(command, sizeof(command), "mkdir -p %s %s/global %s/local", db_dir, db_dir, db_dir);
     printf("+ %s\n", command);
@@ -57,7 +48,11 @@ int set_local_id(long local_id, long global_id) {
         perror("lb_db: set_local_id");
         return r;
     }
-    return 0;
+
+    snprintf(command, sizeof(command), "echo '%lu' > %s/global/%lu", global_id, db_dir, local_id);
+    printf("+ %s\n", command);
+
+    return bash_exec(command);
 }
 
 int get_local_id(long global_id) {
@@ -75,4 +70,21 @@ int get_local_id(long global_id) {
     free(output);
 
     return local_id;
+}
+
+int get_global_id(long local_id) {
+    char command[1024];
+    snprintf(command, sizeof(command), "cat %s/global/%lu", db_dir, local_id);
+    printf("+ %s\n", command);
+
+    char* output = bash_exec_output(command);
+    if (!output) {
+        perror("lb_db: get_local_id");
+        return -1;
+    }
+    int global_id = -1;
+    sscanf(output, "%d", &global_id);
+    free(output);
+
+    return global_id;
 }

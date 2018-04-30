@@ -16,10 +16,32 @@
 int db_init() {
     char *db_dir = DB_DIR;
     char command[1024];
+
+    // Make directories
     snprintf(command, sizeof(command), "mkdir -p %1$s %1$s/topics %1$s/clients", db_dir);
     printf("db_init:\n\t+ %s\n", command);
+    system(command);
 
+    // Make file for ids
+    snprintf(command, sizeof(command), "[ -s %1$s/last_id ] || echo 1 > %1$s/last_id", db_dir);
+    printf("\t+ %s\n", command);
     return bash_exec(command);
+}
+
+long db_next_id() {
+    char *db_dir = DB_DIR;
+    char command[1024];
+
+    // Make directories
+    snprintf(command, sizeof(command), "sed -i \"s/$(cat %1$s/last_id)/$(($(cat %1$s/last_id)+1))/\" %1$s/last_id && cat %1$s/last_id", db_dir);
+    printf("db_next_id:\n\t+ %s\n", command);
+    FILE* out = popen(command, "r");
+
+    long new_id = -1;
+    fscanf(out, "%ld", &new_id);
+    pclose(out);
+
+    return new_id;
 }
 
 int db_subscribe(long id, char *topic) {

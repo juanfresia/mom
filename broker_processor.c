@@ -33,6 +33,16 @@ struct msg_t handle_message(struct msg_t req) {
             count--;
         }
         printf("\n");
+    } else if (req.type == MSG_REGISTER) {
+        req.global_id = db_next_id();
+        if (req.global_id <= 0) {
+            req.global_id = 0;
+            req.type = MSG_ACK_ERROR;
+            return req;
+        } else {
+            req.type = MSG_NEW_ID;
+            return req;
+        }
     }
     req.type = MSG_ACK_OK;
 

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "lb_db.h"
 #include "lb.h"
 #include "msgqueue.h"
 #include "socket.h"
@@ -25,6 +26,13 @@ int get_message(socket_t *s, struct msg_t *msg) {
     if (r < 0) {
         perror("get_message: sock_recv");
         return -1;
+    }
+
+    if (msg->type == MSG_NEW_ID) {
+        set_local_id(msg->global_id, msg->global_id);
+        msg->mtype = 1;
+    } else {
+        msg->mtype = msg->global_id;
     }
 
     printf("Received a message from broker of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg->type), msg->payload);
@@ -59,7 +67,7 @@ int main(void) {
         if (get_message(s, &msg) < 0) {
             _exit(-1);
         }
-        msg.mtype = msg.global_id;
+
         r = msgq_send(msgid, &msg, sizeof(struct msg_t));
         if (r < 0) {
             perror("lb_receiver: msgq_send");
