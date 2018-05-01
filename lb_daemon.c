@@ -31,13 +31,8 @@ int main(void) {
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
 
-    // <testing>
+    // Init db
     init_directories();
-    set_local_id(10, 1003);
-    set_local_id(11, 1241);
-
-    printf("%d\n", get_local_id(1003));
-    // </testing>
 
     // Create IPC queues for clients
     int sendq = msgq_create(LB_IPC_SEND_MQ);
@@ -96,7 +91,7 @@ int main(void) {
     while(!quit) {
         pause();
     }
-    
+
     // TODO: gracefully quit
     for (int i = 0; i < 2; i++) {
         wait(NULL);
