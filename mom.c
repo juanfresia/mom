@@ -34,7 +34,6 @@ int init_msgq() {
 }
 
 // Implementation of MOM API
-
 int register_client() {
     // Initialize IPC message queues
     if (init_msgq() < 0) {
@@ -49,7 +48,7 @@ int register_client() {
         return MOM_ERROR;
     }
 
-    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), 1) < 0) {
+    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
         return MOM_ERROR;
     }
 
@@ -59,7 +58,7 @@ int register_client() {
     }
 
     // Return pid as id (TODO: change reading payload)
-    return msg.global_id;
+    return msg.local_id;
 }
 
 int subscribe(int id, char* topic) {

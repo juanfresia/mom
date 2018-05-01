@@ -18,13 +18,11 @@ void graceful_quit(int sig) {
 	quit = 1;
 }
 
-
 void handle_message(socket_t* s, struct msg_t msg) {
     printf("Received a message of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg.type), msg.payload);
+    msg.local_id = msg.mtype;
 
-    if (msg.type == MSG_REGISTER) {
-        msg.global_id = msg.mtype;
-    } else {
+    if (msg.type != MSG_REGISTER) {
         msg.global_id = get_global_id(msg.mtype);
     }
     int r = SOCK_SEND(s, struct msg_t, msg);

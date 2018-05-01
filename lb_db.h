@@ -77,14 +77,15 @@ int get_global_id(long local_id) {
     snprintf(command, sizeof(command), "cat %s/global/%lu", db_dir, local_id);
     printf("+ %s\n", command);
 
-    char* output = bash_exec_output(command);
+    FILE* output = popen(command, "r");
     if (!output) {
-        perror("lb_db: get_local_id");
+        perror("lb_db: get_global_id");
         return -1;
     }
-    int global_id = -1;
-    sscanf(output, "%d", &global_id);
-    free(output);
+
+    long global_id = -1;
+    fscanf(output, "%ld", &global_id);
+    pclose(output);
 
     return global_id;
 }

@@ -29,11 +29,10 @@ int get_message(socket_t *s, struct msg_t *msg) {
     }
 
     if (msg->type == MSG_NEW_ID) {
-        set_local_id(msg->global_id, msg->global_id);
-        msg->mtype = 1;
-    } else {
-        msg->mtype = msg->global_id;
+        set_local_id(msg->local_id, msg->global_id);
     }
+
+    msg->mtype = msg->local_id;
 
     printf("Received a message from broker of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg->type), msg->payload);
     return 0;

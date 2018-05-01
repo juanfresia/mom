@@ -8,6 +8,7 @@
 
 #include "broker_db.h"
 #include "lb.h"
+#include "log.h"
 #include "msgqueue.h"
 #include "proc.h"
 #include "server.h"
@@ -17,7 +18,7 @@
 
 void handler(socket_t* s) {
     static int connection_id = 1;
-    printf("A connection has arrived\n");
+    log_printf("A connection has arrived\n");
 
     // Set environment variable for socket FD
     char buffer[BUFFER_LEN];
