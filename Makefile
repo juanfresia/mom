@@ -1,10 +1,11 @@
 CC= gcc
 CFLAGS= -g --std=c11 -Wall -Wextra
-NON-MAIN= mom.c server.c socket.c broker_db.c
+NON-MAIN= mom.c server.c socket.c broker_db.c log.c
 BINARIES= $(filter-out $(NON-MAIN), $(wildcard *.c))
 
 all: clean $(BINARIES:.c=)
 
+$(BINARIES:.c=): log.o
 client: client.c mom.o socket.o
 broker_server: broker_server.c socket.o server.o broker_db.o
 broker_processor: broker_processor.c broker_db.o
