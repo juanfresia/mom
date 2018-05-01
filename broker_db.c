@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include "broker_db.h"
-#include "system.h"
 
 #define UNUSED(x) (void)(x)
 
@@ -25,7 +24,7 @@ int db_init() {
     // Make file for ids
     snprintf(command, sizeof(command), "[ -s %1$s/last_id ] || echo 1 > %1$s/last_id", db_dir);
     printf("\t+ %s\n", command);
-    return bash_exec(command);
+    return system(command);
 }
 
 long db_next_id() {
@@ -61,7 +60,7 @@ int db_subscribe(long id, char *topic) {
     // Create directories
     snprintf(command, sizeof(command), "mkdir -p %s", topic_dir);
     printf("db_subscribe:\n\t+ %s\n", command);
-    int r = bash_exec(command);
+    int r = system(command);
     if (r < 0) {
         return r;
     }
@@ -69,7 +68,7 @@ int db_subscribe(long id, char *topic) {
     // Update subscribes
     snprintf(command, sizeof(command), "grep -q '^%1$ld' %2$s || echo '%1$ld' >> %2$s", id, topic_file);
     printf("\t+ %s\n", command);
-    r = bash_exec(command);
+    r = system(command);
     if (r < 0) {
         return r;
     }
@@ -77,7 +76,7 @@ int db_subscribe(long id, char *topic) {
     // Update subscribes
     snprintf(command, sizeof(command), "grep -q '^%1$s' %2$s || echo '%1$s' >> %2$s", topic, client_file);
     printf("\t+ %s\n", command);
-    r = bash_exec(command);
+    r = system(command);
     if (r < 0) {
         return r;
     }
@@ -92,7 +91,7 @@ int db_register_exit(long global_id, long exit_mtype) {
     // Create file with exit pid
     snprintf(command, sizeof(command), "echo '%ld' > %s/clients/%ld.exit", exit_mtype, db_dir, global_id);
     printf("\t+ %s\n", command);
-    return bash_exec(command);
+    return system(command);
 }
 
 long db_get_exit(long global_id) {
@@ -110,7 +109,12 @@ long db_get_exit(long global_id) {
 }
 
 int db_unsubscribe(long id, char *topic) {
-    //    snprintf(command, sizeof(command), "grep -q '^%1$d' %3$s && sed -i 's/^%1$d.*/%1$d/' %3$s || echo '%1$d' >> %3$s", id, topic, topic_file);
+    UNUSED(id);
+    UNUSED(topic);
+    return 0;
+}
+
+int db_unregister(long id, char *topic) {
     UNUSED(id);
     UNUSED(topic);
     return 0;
@@ -133,7 +137,7 @@ int db_get_subscriptors(char *topic, long **id_list) {
         if (r != EOF) i++;
     } while(r != EOF);
     pclose(out);
-    return (i-1);
+    return i;
 }
 
 int db_store_message(char *topic, char *message, long publisher) {

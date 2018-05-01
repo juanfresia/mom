@@ -18,9 +18,19 @@ void graceful_quit(int sig) {
 	quit = 1;
 }
 
+void handle_retrieve(struct msg_t msg) {
+    UNUSED(msg);
+    return;
+}
+
 void handle_message(socket_t* s, struct msg_t msg) {
     printf("Received a message of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg.type), msg.payload);
     msg.local_id = msg.mtype;
+
+    if (msg.type == MSG_RETRIEVE) {
+        handle_retrieve(msg);
+        return;
+    }
 
     if (msg.type != MSG_REGISTER) {
         msg.global_id = get_global_id(msg.mtype);
