@@ -2,6 +2,7 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "broker_db.h"
@@ -18,6 +19,11 @@ void graceful_quit(int sig) {
 }
 
 struct msg_t handle_message(struct msg_t req) {
+    int outq = msgq_getmsg(B_IPC_OUT_MQ);
+    if (outq < 0) {
+        _exit(-1);
+    }
+
     long *id_list;
     if (req.type == MSG_SUBSCRIBE) {
         printf("I received a subscribe\n");
@@ -32,6 +38,7 @@ struct msg_t handle_message(struct msg_t req) {
             printf(" %ld", id_list[count]);
             count--;
         }
+        free(id_list);
         printf("\n");
     } else if (req.type == MSG_REGISTER) {
         req.global_id = db_next_id();
@@ -40,9 +47,33 @@ struct msg_t handle_message(struct msg_t req) {
             req.type = MSG_ACK_ERROR;
             return req;
         } else {
+            if (db_register_exit(req.global_id, req.mtype) < 0) {
+                perror("reginstering_exit");
+            }
             req.type = MSG_NEW_ID;
             return req;
         }
+    } else if (req.type == MSG_PUBLISH) {
+        int count = db_get_subscriptors(req.topic, &id_list);
+        printf("Publishing to %s\n", req.topic);
+
+        struct msg_t new_msg = req;
+        while (count > 0) {
+            printf("\tnow sending to %ld\n", id_list[count]);
+            req.global_id = id_list[count];
+            req.mtype = db_get_exit(req.global_id);
+            if (req.mtype <= 0) {
+                printf("error finding exit for publish");
+                continue;
+            }
+            int r = msgq_send(outq, &new_msg, sizeof(struct msg_t));
+            if (r < 0) {
+                perror("broker_processor: msgq_send");
+                continue;
+            }
+            count--;
+        }
+        free(id_list);
     }
     req.type = MSG_ACK_OK;
 

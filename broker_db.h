@@ -4,18 +4,22 @@
  * Broker database interface
  */
 
- int db_init();
+int db_init();
 
 long db_next_id();
 
- int db_subscribe(long id, char *topic);
+int db_register_exit(long global_id, long exit_mtype);
 
- int db_unsubscribe(long id, char *topic);
+long db_get_exit(long global_id);
 
- int db_get_subscriptors(char *topic, long **id_list);
+int db_subscribe(long id, char *topic);
 
- int db_store_message(char *topic, char *message, long publisher);
+int db_unsubscribe(long id, char *topic);
 
- int db_close();
+int db_get_subscriptors(char *topic, long **id_list);
 
- #endif // BROKER_DB_H
+int db_store_message(char *topic, char *message, long publisher);
+
+int db_close();
+
+#endif // BROKER_DB_H

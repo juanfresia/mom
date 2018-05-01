@@ -33,6 +33,7 @@ long db_next_id() {
     char command[1024];
 
     // Make directories
+    // sed -i "s/$(cat last_id)/$(($(cat last_id)+1))/" last_id
     snprintf(command, sizeof(command), "sed -i \"s/$(cat %1$s/last_id)/$(($(cat %1$s/last_id)+1))/\" %1$s/last_id && cat %1$s/last_id", db_dir);
     printf("db_next_id:\n\t+ %s\n", command);
     FILE* out = popen(command, "r");
@@ -84,6 +85,30 @@ int db_subscribe(long id, char *topic) {
     return 0;
 }
 
+int db_register_exit(long global_id, long exit_mtype) {
+    char *db_dir = DB_DIR;
+    char command[1024];
+
+    // Create file with exit pid
+    snprintf(command, sizeof(command), "echo '%ld' > %s/clients/%ld.exit", exit_mtype, db_dir, global_id);
+    printf("\t+ %s\n", command);
+    return bash_exec(command);
+}
+
+long db_get_exit(long global_id) {
+    char *db_dir = DB_DIR;
+    char command[1024];
+
+    snprintf(command, sizeof(command), "cat %s/clients/%ld.exit", db_dir, global_id);
+
+    long exit_mtype = -1;
+
+    FILE* out = popen(command, "r");
+    fscanf(out, "%ld", &exit_mtype);
+    pclose(out);
+    return exit_mtype;
+}
+
 int db_unsubscribe(long id, char *topic) {
     //    snprintf(command, sizeof(command), "grep -q '^%1$d' %3$s && sed -i 's/^%1$d.*/%1$d/' %3$s || echo '%1$d' >> %3$s", id, topic, topic_file);
     UNUSED(id);
@@ -96,7 +121,7 @@ int db_get_subscriptors(char *topic, long **id_list) {
     char command[1024];
     char topic_file[100];
     snprintf(topic_file, sizeof(topic_file), "%s/topics/%s/_subscribers", db_dir, topic);
-    snprintf(command, sizeof(topic_file), "cat %s", topic_file);
+    snprintf(command, sizeof(command), "cat %s", topic_file);
 
     *id_list = (long*)malloc(sizeof(long) * 100);
     for (int i = 0; i < 100; i++) (*id_list)[i] = 0;

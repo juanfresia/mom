@@ -30,19 +30,6 @@ int is_separator(char c) {
     }
 }
 
-int next_param(char* buffer, char** store) {
-    // got a valid char in buffer[0], find length
-    int length = 0;
-    while (!is_separator(buffer[length]))
-        length++;
-    length++;
-    buffer[length] = '\0';
-
-    *store = malloc(sizeof(char) * length);
-    strncpy(*store, buffer, length);
-    return length;
-}
-
 int parse_line(char* buffer, long id) {
     if (!is_valid_command(buffer[0])) {
         return 0;
