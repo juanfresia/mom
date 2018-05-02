@@ -26,6 +26,7 @@ struct msg_t handle_message(struct msg_t req) {
     }
 
     long *id_list;
+    char **topics;
     if (req.type == MSG_SUBSCRIBE) {
         log_printf("I received a subscribe\n");
         if (db_subscribe(req.global_id, req.topic) < 0) {
@@ -39,6 +40,16 @@ struct msg_t handle_message(struct msg_t req) {
             log_printf("\t%ld\n", id_list[count-1]);
             count--;
         }
+
+        count = db_get_subscriptions(req.global_id, &topics);
+        log_printf("Subscriptions:\n");
+        while(count > 0) {
+            log_printf("\t%s\n", topics[count-1]);
+            count--;
+        }
+
+        for (int i = 0; i < 100; i++) free(topics[i]);
+        free(topics);
         free(id_list);
     } else if (req.type == MSG_REGISTER) {
         log_printf("I received a register\n");

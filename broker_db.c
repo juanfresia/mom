@@ -146,6 +146,30 @@ int db_get_subscriptors(char *topic, long **id_list) {
     return i;
 }
 
+int db_get_subscriptions(long id, char ***topic_list) {
+    char *db_dir = DB_DIR;
+    char command[1024];
+    char client_file[100];
+    snprintf(client_file, sizeof(client_file), "%s/clients/%ld.subs", db_dir, id);
+    snprintf(command, sizeof(command), "cat %s", client_file);
+
+    char** tmp_list = (char**)malloc(sizeof(char*) * 100);
+    for (int i = 0; i < 100; i++) tmp_list[i] = malloc(sizeof(char) * 100);
+
+    log_printf("\t+ %s\n", command);
+    FILE* out = popen(command, "r");
+    int r;
+    int i = 0;
+    do {
+        r = fscanf(out, "%s\n", tmp_list[i]);
+        if (r != EOF) i++;
+    } while(r != EOF);
+    pclose(out);
+
+    *topic_list = tmp_list;
+    return i;
+}
+
 int db_store_message(char *topic, char *message, long publisher) {
     UNUSED(topic);
     UNUSED(message);
