@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "broker_db.h"
+#include "log.h"
 
 #define UNUSED(x) (void)(x)
 
@@ -18,12 +19,12 @@ int db_init() {
 
     // Make directories
     snprintf(command, sizeof(command), "mkdir -p %1$s %1$s/topics %1$s/clients", db_dir);
-    printf("db_init:\n\t+ %s\n", command);
+    log_printf("db_init:\n\t+ %s\n", command);
     system(command);
 
     // Make file for ids
     snprintf(command, sizeof(command), "[ -s %1$s/last_id ] || echo 1 > %1$s/last_id", db_dir);
-    printf("\t+ %s\n", command);
+    log_printf("\t+ %s\n", command);
     return system(command);
 }
 
@@ -34,7 +35,7 @@ long db_next_id() {
     // Make directories
     // sed -i "s/$(cat last_id)/$(($(cat last_id)+1))/" last_id
     snprintf(command, sizeof(command), "sed -i \"s/$(cat %1$s/last_id)/$(($(cat %1$s/last_id)+1))/\" %1$s/last_id && cat %1$s/last_id", db_dir);
-    printf("db_next_id:\n\t+ %s\n", command);
+    log_printf("db_next_id:\n\t+ %s\n", command);
     FILE* out = popen(command, "r");
 
     long new_id = -1;
@@ -59,7 +60,7 @@ int db_subscribe(long id, char *topic) {
 
     // Create directories
     snprintf(command, sizeof(command), "mkdir -p %s", topic_dir);
-    printf("db_subscribe:\n\t+ %s\n", command);
+    log_printf("db_subscribe:\n\t+ %s\n", command);
     int r = system(command);
     if (r < 0) {
         return r;
@@ -67,7 +68,7 @@ int db_subscribe(long id, char *topic) {
 
     // Update subscribes
     snprintf(command, sizeof(command), "grep -q '^%1$ld' %2$s || echo '%1$ld' >> %2$s", id, topic_file);
-    printf("\t+ %s\n", command);
+    log_printf("\t+ %s\n", command);
     r = system(command);
     if (r < 0) {
         return r;
@@ -75,7 +76,7 @@ int db_subscribe(long id, char *topic) {
 
     // Update subscribes
     snprintf(command, sizeof(command), "grep -q '^%1$s' %2$s || echo '%1$s' >> %2$s", topic, client_file);
-    printf("\t+ %s\n", command);
+    log_printf("\t+ %s\n", command);
     r = system(command);
     if (r < 0) {
         return r;
@@ -90,7 +91,7 @@ int db_register_exit(long global_id, long exit_mtype) {
 
     // Create file with exit pid
     snprintf(command, sizeof(command), "echo '%ld' > %s/clients/%ld.exit", exit_mtype, db_dir, global_id);
-    printf("\t+ %s\n", command);
+    log_printf("\t+ %s\n", command);
     return system(command);
 }
 
@@ -102,6 +103,7 @@ long db_get_exit(long global_id) {
 
     long exit_mtype = -1;
 
+    log_printf("\t+ %s\n", command);
     FILE* out = popen(command, "r");
     fscanf(out, "%ld", &exit_mtype);
     pclose(out);
@@ -129,6 +131,8 @@ int db_get_subscriptors(char *topic, long **id_list) {
 
     long* tmp_list = (long*)malloc(sizeof(long) * 100);
     for (int i = 0; i < 100; i++) tmp_list[i] = 0;
+
+    log_printf("\t+ %s\n", command);
     FILE* out = popen(command, "r");
     int r;
     int i = 0;
@@ -137,8 +141,6 @@ int db_get_subscriptors(char *topic, long **id_list) {
         if (r != EOF) i++;
     } while(r != EOF);
     pclose(out);
-
-    log_printf("Is this ok?\n");
 
     *id_list = tmp_list;
     return i;

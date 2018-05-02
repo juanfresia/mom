@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "log.h"
+
 char* db_dir = "lb_data";
 
 /*
@@ -26,11 +28,11 @@ char* db_dir = "lb_data";
 int init_directories() {
     char command[1024];
     snprintf(command, sizeof(command), "mkdir -p %s %s/global %s/local", db_dir, db_dir, db_dir);
-    printf("+ %s\n", command);
+    log_printf("+ %s\n", command);
 
     int r = system(command);
     if (r < 0) {
-        perror("lb_db: init_directories");
+        log_perror("lb_db: init_directories");
         return r;
     }
     return 0;
@@ -39,28 +41,46 @@ int init_directories() {
 int set_local_id(long local_id, long global_id) {
     char command[1024];
     snprintf(command, sizeof(command), "echo '%lu' > %s/local/%lu", local_id, db_dir, global_id);
-    printf("+ %s\n", command);
+    log_printf("+ %s\n", command);
 
     int r = system(command);
     if (r < 0) {
-        perror("lb_db: set_local_id");
+        log_perror("lb_db: set_local_id");
         return r;
     }
 
     snprintf(command, sizeof(command), "echo '%lu' > %s/global/%lu", global_id, db_dir, local_id);
-    printf("+ %s\n", command);
+    log_printf("+ %s\n", command);
 
     return system(command);
+}
+
+int get_local_id(long global_id) {
+    char command[1024];
+    snprintf(command, sizeof(command), "cat %s/local/%lu", db_dir, global_id);
+    log_printf("+ %s\n", command);
+
+    FILE* output = popen(command, "r");
+    if (!output) {
+        log_perror("lb_db: get_local_id");
+        return -1;
+    }
+
+    long local_id = -1;
+    fscanf(output, "%ld", &local_id);
+    pclose(output);
+
+    return local_id;
 }
 
 int get_global_id(long local_id) {
     char command[1024];
     snprintf(command, sizeof(command), "cat %s/global/%lu", db_dir, local_id);
-    printf("+ %s\n", command);
+    log_printf("+ %s\n", command);
 
     FILE* output = popen(command, "r");
     if (!output) {
-        perror("lb_db: get_global_id");
+        log_perror("lb_db: get_global_id");
         return -1;
     }
 

@@ -34,13 +34,12 @@ struct msg_t handle_message(struct msg_t req) {
         }
 
         int count = db_get_subscriptors(req.topic, &id_list);
-        log_printf("Subscribers list:");
+        log_printf("Subscribers list:\n");
         while (count > 0) {
-            log_printf(" %ld", id_list[count-1]);
+            log_printf("\t%ld\n", id_list[count-1]);
             count--;
         }
         free(id_list);
-        log_printf("\n");
     } else if (req.type == MSG_REGISTER) {
         log_printf("I received a register\n");
         req.global_id = db_next_id();
@@ -63,10 +62,9 @@ struct msg_t handle_message(struct msg_t req) {
         struct msg_t new_msg = req;
         while (count > 0) {
             count--;
-            log_printf("\tnow sending to %ld\n", id_list[count]);
-            req.global_id = id_list[count];
-            req.mtype = db_get_exit(req.global_id);
-            if (req.mtype <= 0) {
+            new_msg.global_id = id_list[count];
+            new_msg.mtype = db_get_exit(req.global_id);
+            if (new_msg.mtype <= 0) {
                 log_printf("error finding exit for publish");
                 continue;
             }
@@ -77,7 +75,6 @@ struct msg_t handle_message(struct msg_t req) {
                 log_perror("broker_processor: msgq_send");
                 continue;
             }
-            count--;
         }
         log_printf("Finish sending\n");
         free(id_list);

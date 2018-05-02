@@ -34,7 +34,7 @@ int get_message(socket_t *s, struct msg_t *msg) {
     if (msg->type == MSG_NEW_ID) {
         set_local_id(msg->local_id, msg->global_id);
     }
-    msg->mtype = msg->local_id;
+    msg->mtype = get_local_id(msg->global_id);
 
     return 0;
 }

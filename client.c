@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "log.h"
 #include "mom.h"
 
@@ -37,6 +38,7 @@ int is_separator(char c) {
 
 int execute_cmd(char cmd, long id, char* topic, char* payload) {
     log_printf("Going to execute %c, with [id: %ld, topic: %s, payload: %s]\n", cmd, id, topic, payload);
+    char* retrieve_payload;
     switch (cmd) {
         case 's':
             return subscribe(id, topic);
@@ -44,6 +46,11 @@ int execute_cmd(char cmd, long id, char* topic, char* payload) {
             return unsubscribe(id, topic);
         case 'p':
             return publish(id, topic, payload);
+        case 'r':
+            retrieve(id, topic, &retrieve_payload);
+            log_printf("Received %s\n", retrieve_payload);
+            free(retrieve_payload);
+            return 0;
     }
     return 0;
 }
@@ -105,6 +112,7 @@ int main(void) {
     int quit = CONTINUE;
 
     while(quit != EXIT) {
+        printf("> ");
         if (!fgets(buffer, size, stdin)) break;
 
         quit = parse_line(buffer, id);

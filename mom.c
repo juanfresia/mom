@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -66,7 +67,7 @@ int register_client() {
     }
     log_printf("Received register ack\n");
     print_msg(msg);
-    
+
     // Assert message type is a correct ACK
     if (msg.type != MSG_NEW_ID) {
         return MOM_ERROR;
@@ -157,7 +158,7 @@ int retrieve(int id, char* topic, char** msg_store) {
     struct msg_t msg = {0};
 
     log_printf("Attemt to retreive a message\n");
-    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), id) < 0) {
+    if (msgq_recv(msgid_pub, &msg, sizeof(msg), id) < 0) {
         return MOM_ERROR;
     }
     log_printf("Received a message\n");
