@@ -9,7 +9,7 @@
  * Returns an id to be used in the rest of the operations
  * or MOM_ERROR in case of error.
  */
-int register_client();
+ int register_client();
 
 /*
  * Subscribes a client to a topic.

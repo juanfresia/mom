@@ -211,7 +211,7 @@ int db_unregister(long id) {
     }
     db_free_topic_list(topic_list);
 
-    snprintf(client_prefix, sizeof(client_prefix), "%s/client/%ld", db_dir, id);
+    snprintf(client_prefix, sizeof(client_prefix), "%s/clients/%ld", db_dir, id);
     snprintf(command, sizeof(command), "rm %1$s.subs %1$s.exit", client_prefix);
     log_printf("\t+ %s\n", command);
     int r = system(command);

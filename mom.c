@@ -198,7 +198,27 @@ int retrieve(int id, char* topic, char** msg_store) {
 }
 
 int unregister(int id) {
-    UNUSED(id);
-    log_printf("unregister not yet implemented\n");
-    return MOM_ERROR;
+    // Send subscription message
+    struct msg_t msg = {0};
+    msg.mtype = id;
+    msg.type = MSG_UNREGISTER;
+
+    log_printf("Sending unregister\n");
+    print_msg(msg);
+    if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
+        return MOM_ERROR;
+    }
+
+    log_printf("Waiting for unregister ack\n");
+    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
+        return MOM_ERROR;
+    }
+    log_printf("Received unregister ack\n");
+    print_msg(msg);
+
+    // Assert message type is a correct ACK
+    if (msg.type != MSG_ACK_OK) {
+        return MOM_ERROR;
+    }
+    return MOM_SUCCESS;
 }
