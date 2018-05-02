@@ -63,7 +63,7 @@ struct msg_t handle_message(struct msg_t req) {
         while (count > 0) {
             count--;
             new_msg.global_id = id_list[count];
-            new_msg.mtype = db_get_exit(req.global_id);
+            new_msg.mtype = db_get_exit(new_msg.global_id);
             if (new_msg.mtype <= 0) {
                 log_printf("error finding exit for publish");
                 continue;
