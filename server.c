@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200112L
 #define _XOPEN_SOURCE 500
 
+#include "log.h"
 #include "socket.h"
 #include "server.h"
 #include <unistd.h>
@@ -13,7 +14,6 @@
 static int quit = 0;
 
 void graceful_quit(int sig __attribute__((unused))) {
-
 	quit = 1;
 }
 
@@ -28,13 +28,13 @@ void concurrent_handler(socket_t* s, handler_t callback, socket_t* orig) {
 	int pid = fork();
 
 	if (pid < 0) {
-		printf("Fork error while handling connection!\n");
+		log_printf("Fork error while handling connection!\n");
 	} else if (pid == 0) {
-		printf("I'm process %d handling a new request\n", getpid());
+		log_printf("I'm process %d handling a new request\n", getpid());
 		callback(s);
 		socket_destroy(s);
 		socket_destroy(orig);
-		printf("Process %d finish the request\n", getpid());
+		log_printf("Process %d finish the request\n", getpid());
 		_exit(0);
 	}
 	socket_destroy(s);
@@ -47,36 +47,36 @@ void run_server(char* ip, char* port, handler_t callback, server_type type) {
 	sigaction(SIGTERM, &sa, NULL);
 	sigaction(SIGINT, &sa, NULL);
 
-	printf("Creating socket\n");
+	log_printf("Creating socket\n");
 	socket_t* s = socket_create(SOCK_PASSIVE);
 	if (!s) {
-		printf("Error creating socket\n");
+		log_printf("Error creating socket\n");
 		return;
 	}
 
-	printf("Binding socket\n");
+	log_printf("Binding socket\n");
 	int err = socket_bind(s, ip, port);
 	if (err < 0) {
-		perror("Binding failed");
+		log_perror("Binding failed");
 		socket_destroy(s);
 		return;
 	}
 
-	printf("Setting socket as passive\n");
+	log_printf("Setting socket as passive\n");
 	err = socket_listen(s, 0);
 	if (err < 0) {
-		printf("Listen failed: %d\n", err);
+		log_printf("Listen failed: %d\n", err);
 		socket_destroy(s);
 		return;
 	}
 
 	while (errno != EINTR && !quit) {
-		printf("Listening on socket %s:%s\n", ip, port);
+		log_printf("Listening on socket %s:%s\n", ip, port);
 		socket_t* s2 = socket_accept(s);
 		if (!s2) {
-			printf("Accept failed\n");
+			log_printf("Accept failed\n");
 		} else {
-			printf("Accept successful!\n");
+			log_printf("Accept successful!\n");
 			if (type == SERVER_CONCURRENT) {
 				concurrent_handler(s2, callback, s);
 			} else {
@@ -84,7 +84,7 @@ void run_server(char* ip, char* port, handler_t callback, server_type type) {
 			}
 		}
 	}
-	printf("Exiting...\n");
+	log_printf("Exiting...\n");
 	socket_destroy(s);
 	return;
 }

@@ -34,19 +34,19 @@ void handler(socket_t* s) {
     // TODO: cleanup
     int pid = fork();
     if (pid < 0) {
-        perror("broker_server: entrance fork");
+        log_perror("broker_server: entrance fork");
     } else if (pid == 0) {
         execl("broker_entrance", "broker_entrance", NULL);
-        perror("broker_server: execv");
+        log_perror("broker_server: execv");
         return;
     }
 
     pid = fork();
     if (pid < 0) {
-        perror("broker_server: exit fork");
+        log_perror("broker_server: exit fork");
     } else if (pid == 0) {
         execl("broker_exit", "broker_exit", NULL);
-        perror("broker_server: execv");
+        log_perror("broker_server: execv");
         return;
     }
 }
@@ -54,7 +54,7 @@ void handler(socket_t* s) {
 int main (void) {
     // Init db
     if (db_init() < 0) {
-        perror("broker_server: db_init");
+        log_perror("broker_server: db_init");
         _exit(-1);
     }
 
@@ -73,10 +73,10 @@ int main (void) {
     // Launch process for broker processor
     int b_proc_pid = fork();
     if (b_proc_pid < 0) {
-        perror("b_daemon: processor fork");
+        log_perror("b_daemon: processor fork");
     } else if (b_proc_pid == 0) {
         execl("broker_processor", "broker_processor", NULL);
-        perror("b_daemon: execl");
+        log_perror("b_daemon: execl");
         _exit(-1);
     }
 
@@ -87,7 +87,7 @@ int main (void) {
     // Gracefully kill children
     int wpid = graceful_quit_or_kill(b_proc_pid, NULL);
     if (wpid != b_proc_pid) {
-        perror("b_daemon: broker processor quit");
+        log_perror("b_daemon: broker processor quit");
     }
 
     // Free resources

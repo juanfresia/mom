@@ -57,7 +57,7 @@ struct msg_t handle_message(struct msg_t req) {
     } else if (req.type == MSG_PUBLISH) {
         log_printf("I received a publish\n");
         int count = db_get_subscriptors(req.topic, &id_list);
-        printf("Publishing to %s\n", req.topic);
+        log_printf("Publishing to %s\n", req.topic);
 
         struct msg_t new_msg = req;
         while (count > 0) {
@@ -128,6 +128,6 @@ int main(void) {
         }
     }
 
-    printf("Broker processor quits\n");
+    log_printf("Broker processor quits\n");
     return 0;
 }

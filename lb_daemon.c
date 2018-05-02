@@ -9,6 +9,7 @@
 
 #include "lb.h"
 #include "lb_db.h"
+#include "log.h"
 #include "msgqueue.h"
 #include "socket.h"
 
@@ -23,7 +24,7 @@ void graceful_quit(int sig) {
 
 // Local broker deamon
 int main(void) {
-    printf("Starting broker deamon\n");
+    log_printf("Starting broker deamon\n");
 
     // Setting signal handler for graceful_quit
     struct sigaction sa = {0};
@@ -57,14 +58,14 @@ int main(void) {
     // Attempt to connect to the broker server
     socket_t* s = socket_create(SOCK_ACTIVE);
     if (!s) {
-        perror("lb_daemon: socket_create");
+        log_perror("lb_daemon: socket_create");
         msgq_destroy(sendq);
         msgq_destroy(recvq);
         _exit(-1);
     }
 
     if (socket_connect(s, "127.0.0.1", "12345") < 0) {
-        perror("lb_daemon: socket_connect");
+        log_perror("lb_daemon: socket_connect");
         socket_destroy(s);
         msgq_destroy(sendq);
         msgq_destroy(recvq);
@@ -80,19 +81,19 @@ int main(void) {
     // TODO: cleanup
     int pid = fork();
     if (pid < 0) {
-        perror("lb_daemon: sender fork");
+        log_perror("lb_daemon: sender fork");
     } else if (pid == 0) {
         execl("lb_sender", "lb_sender", NULL);
-        perror("lb_daemon: execv");
+        log_perror("lb_daemon: execv");
         _exit(-1);
     }
 
     pid = fork();
     if (pid < 0) {
-        perror("lb_daemon: receiver fork");
+        log_perror("lb_daemon: receiver fork");
     } else if (pid == 0) {
         execl("lb_receiver", "lb_receiver", NULL);
-        perror("lb_daemon: execv");
+        log_perror("lb_daemon: execv");
         _exit(-1);
     }
 
@@ -106,7 +107,7 @@ int main(void) {
     }
 
     // Cleanup
-    printf("Shutting down daemon\n");
+    log_printf("Shutting down daemon\n");
     socket_destroy(s);
     msgq_destroy(sendq);
     msgq_destroy(recvq);

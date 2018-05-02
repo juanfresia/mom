@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "lb.h"
+#include "log.h"
 #include "msgqueue.h"
 #include "socket.h"
 
@@ -19,7 +20,7 @@ void graceful_quit(int sig) {
 }
 
 int main(void) {
-    printf("Broker exit started!!\n");
+    log_printf("Broker exit started!!\n");
 
     // Setting signal handler for graceful_quit
     struct sigaction sa = {0};
@@ -30,7 +31,7 @@ int main(void) {
     // Get IPC queue
     int outq = msgq_getmsg(B_IPC_OUT_MQ);
     if (outq < 0) {
-        perror("broker_exit: msgq_getmsg");
+        log_perror("broker_exit: msgq_getmsg");
         _exit(-1);
     }
 
@@ -46,21 +47,23 @@ int main(void) {
     // Main loop
     struct msg_t msg = {0};
     while(!quit) {
-        printf("Waiting for response processing\n");
+        log_printf("Waiting for a response\n");
         int r = msgq_recv(outq, &msg, sizeof(struct msg_t), connection_id);
         if (r < 0) {
-            perror("broker_processor: msgq_recv");
+            log_perror("broker_processor: msgq_recv");
             _exit(-1);
         }
+        log_printf("Received a response\n");
+        print_msg(msg);
 
-        printf("I'm going to send a response [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
         r = SOCK_SEND(s, struct msg_t, msg);
         if (r < 0) {
-            perror("server_handler: sock_send");
+            log_perror("server_handler: sock_send");
             _exit(-1);
         }
+        log_printf("Response sent\n");
     }
 
-    printf("Broker exit finishes!!\n");
+    log_printf("Broker exit finishes!!\n");
     return 0;
 }

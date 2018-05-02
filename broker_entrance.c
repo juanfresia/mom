@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "lb.h"
+#include "log.h"
 #include "msgqueue.h"
 #include "socket.h"
 
@@ -19,7 +20,7 @@ void graceful_quit(int sig) {
 }
 
 int main(void) {
-    printf("Broker entrance started!!\n");
+    log_printf("Broker entrance started!!\n");
 
     // Setting signal handler for graceful_quit
     struct sigaction sa = {0};
@@ -30,7 +31,7 @@ int main(void) {
     // Get IPC queue
     int inq = msgq_getmsg(B_IPC_IN_MQ);
     if (inq < 0) {
-        perror("broker_entrance: msgq_getmsg");
+        log_perror("broker_entrance: msgq_getmsg");
         _exit(-1);
     }
 
@@ -46,23 +47,24 @@ int main(void) {
     // Main loop
     struct msg_t msg = {0};
     while(!quit) {
-        printf("Waiting for requests\n");
+        log_printf("Waiting for requests\n");
         int r = SOCK_RECV(s, struct msg_t, msg);
         if (r <= 0) {
-            perror("server_handler: sock_recv");
+            log_perror("server_handler: sock_recv");
             _exit(-1);
         }
-
-        printf("I received a request [%lu, %s]\n", msg.global_id, MSG_TYPE_TO_STRING(msg.type));
         msg.mtype = connection_id;
+
+        log_printf("Received a request\n");
+        print_msg(msg);
 
         r = msgq_send(inq, &msg, sizeof(struct msg_t));
         if (r < 0) {
-            perror("broker_processor: msgq_send");
+            log_perror("broker_processor: msgq_send");
             _exit(-1);
         }
     }
 
-    printf("Broker entrance exiting\n");
+    log_printf("Broker entrance exiting\n");
     return 0;
 }
