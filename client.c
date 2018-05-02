@@ -65,21 +65,25 @@ int parse_line(char* buffer, long id) {
     char cmd = buffer[0];
     buffer++;
 
-    // skip spaces
-    if (buffer[0] != ' ') return USAGE;
-    for ( ; *(buffer) == ' '; buffer++) ;
-    if (is_separator(buffer[0])) return USAGE;
-
     char topic[100] = {0};
     int counter = 0;
-    while (!is_separator(*(buffer))) {
-        topic[counter] = *buffer;
-        buffer++;
-        counter++;
-    }
-    topic[counter] = '\0';
 
-    char payload[100] = {};
+    if (cmd != 'r') {
+        // skip spaces
+        if (buffer[0] != ' ') return USAGE;
+        for ( ; *(buffer) == ' '; buffer++) ;
+        if (is_separator(buffer[0])) return USAGE;
+
+        while (!is_separator(*(buffer))) {
+            topic[counter] = *buffer;
+            buffer++;
+            counter++;
+        }
+        topic[counter] = '\0';
+    }
+
+
+    char payload[100] = {0};
     if (cmd == 'p') {
         // skip spaces
         for ( ; *(buffer) == ' '; buffer++) ;
