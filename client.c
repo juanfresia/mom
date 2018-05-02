@@ -86,7 +86,7 @@ int parse_line(char* buffer, long id) {
         if (is_separator(buffer[0])) return USAGE;
 
         counter = 0;
-        while (!is_separator(*(buffer))) {
+        while (*(buffer) != '\n' && counter < 98) {
             payload[counter] = *buffer;
             buffer++;
             counter++;
