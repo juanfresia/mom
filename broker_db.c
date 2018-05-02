@@ -110,18 +110,6 @@ long db_get_exit(long global_id) {
     return exit_mtype;
 }
 
-int db_unsubscribe(long id, char *topic) {
-    UNUSED(id);
-    UNUSED(topic);
-    return 0;
-}
-
-int db_unregister(long id, char *topic) {
-    UNUSED(id);
-    UNUSED(topic);
-    return 0;
-}
-
 int db_get_subscriptors(char *topic, long **id_list) {
     char *db_dir = DB_DIR;
     char command[1024];
@@ -176,6 +164,63 @@ int db_store_message(char *topic, char *message, long publisher) {
     UNUSED(publisher);
     return 0;
 }
+
+void db_free_topic_list(char** topic_list) {
+    for (int i = 0; i < 100; i++) free(topic_list[i]);
+    free(topic_list);
+}
+
+int db_unsubscribe(long id, char *topic) {
+    char *db_dir = DB_DIR;
+    char command[1024];
+
+    char topic_file[100];
+    snprintf(topic_file, sizeof(topic_file), "%s/topics/%s/_subscribers", db_dir, topic);
+
+    char client_file[100];
+    snprintf(client_file, sizeof(client_file), "%s/clients/%ld.subs", db_dir, id);
+
+    // Delete client from topic
+    snprintf(command, sizeof(command), "sed -i '/^%1$ld/d' %2$s", id, topic_file);
+    log_printf("\t+ %s\n", command);
+    int r = system(command);
+    if (r < 0) {
+        return r;
+    }
+
+    // Delete topic from client
+    snprintf(command, sizeof(command), "sed -i '/^%1$s/d' %2$s", topic, client_file);
+    log_printf("\t+ %s\n", command);
+    r = system(command);
+    if (r < 0) {
+        return r;
+    }
+
+    return 0;
+}
+
+int db_unregister(long id) {
+    char *db_dir = DB_DIR;
+    char command[1024];
+    char client_prefix[100];
+
+    char **topic_list;
+    int count = db_get_subscriptions(id, &topic_list);
+    for (int i = 0; i < count; i++) {
+        db_unsubscribe(id, topic_list[i]);
+    }
+    db_free_topic_list(topic_list);
+
+    snprintf(client_prefix, sizeof(client_prefix), "%s/client/%ld", db_dir, id);
+    snprintf(command, sizeof(command), "rm %1$s.subs %1$s.exit", client_prefix);
+    log_printf("\t+ %s\n", command);
+    int r = system(command);
+    if (r < 0) {
+        return r;
+    }
+    return 0;
+}
+
 
 int db_close() {
     return 0;

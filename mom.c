@@ -111,10 +111,36 @@ int subscribe(int id, char* topic) {
 }
 
 int unsubscribe(int id, char* topic) {
-    UNUSED(id);
-    UNUSED(topic);
-    log_printf("unsubscribe not yet implemented\n");
-    return MOM_ERROR;
+    // Send subscription message
+    struct msg_t msg = {0};
+    msg.mtype = id;
+    msg.type = MSG_UNSUBSCRIBE;
+
+    if (strlen(topic) >= MAX_TOPIC_LENGTH) {
+        return MOM_ERROR;
+    }
+    strcpy(msg.topic, topic);
+
+    log_printf("Sending unsubscription\n");
+    print_msg(msg);
+    if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
+        return MOM_ERROR;
+    }
+
+    log_printf("Waiting for unsubscription ack\n");
+    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
+        return MOM_ERROR;
+    }
+
+    log_printf("Received unsubscription ack\n");
+    print_msg(msg);
+
+    // Assert message type is a correct ACK
+    if (msg.type != MSG_ACK_OK) {
+        return MOM_ERROR;
+    }
+
+    return MOM_SUCCESS;
 }
 
 int publish(int id, char* topic, char* message) {

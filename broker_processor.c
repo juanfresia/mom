@@ -48,8 +48,7 @@ struct msg_t handle_message(struct msg_t req) {
             count--;
         }
 
-        for (int i = 0; i < 100; i++) free(topics[i]);
-        free(topics);
+        db_free_topic_list(topics);
         free(id_list);
     } else if (req.type == MSG_REGISTER) {
         log_printf("I received a register\n");
@@ -89,6 +88,13 @@ struct msg_t handle_message(struct msg_t req) {
         }
         log_printf("Finish sending\n");
         free(id_list);
+    } else if (req.type == MSG_UNSUBSCRIBE) {
+        log_printf("I received a db_unsubscribe\n");
+        if (db_unsubscribe(req.global_id, req.topic) < 0) {
+            log_perror("unsubscribing");
+        }
+    } else if (req.type == MSG_UNREGISTER) {
+
     }
     req.type = MSG_ACK_OK;
 

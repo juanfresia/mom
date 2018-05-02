@@ -18,7 +18,13 @@ int db_unsubscribe(long id, char *topic);
 
 int db_get_subscriptors(char *topic, long **id_list);
 
+int db_get_subscriptions(long id, char ***topic_list);
+
 int db_store_message(char *topic, char *message, long publisher);
+
+void db_free_topic_list(char** topic_list);
+
+int db_unregister(long id);
 
 int db_close();
 
