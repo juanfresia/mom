@@ -52,24 +52,7 @@ int set_local_id(long local_id, long global_id) {
 
     return system(command);
 }
-//
-// int get_local_id(long global_id) {
-//     char command[1024];
-//     snprintf(command, sizeof(command), "cat %s/local/%lu", db_dir, global_id);
-//     printf("+ %s\n", command);
-//
-//     char* output = bash_exec_output(command);
-//     if (!output) {
-//         perror("lb_db: get_local_id");
-//         return -1;
-//     }
-//     int local_id = -1;
-//     sscanf(output, "%d", &local_id);
-//     free(output);
-//
-//     return local_id;
-// }
-//
+
 int get_global_id(long local_id) {
     char command[1024];
     snprintf(command, sizeof(command), "cat %s/global/%lu", db_dir, local_id);

@@ -2,8 +2,13 @@
 #include "log.h"
 #include "mom.h"
 
+#define USAGE 0
+#define EXIT 1
+#define CONTINUE 2
+
 void print_usage() {
-    log_printf("And here I would put my usage message... if only I had one\n");
+    // log_printf("And here I would put my usage message... if only I had one\n");
+    log_printf("Wrong command\n");
 }
 
 int is_valid_command(char c) {
@@ -30,20 +35,33 @@ int is_separator(char c) {
     }
 }
 
+int execute_cmd(char cmd, long id, char* topic, char* payload) {
+    log_printf("Going to execute %c, with [id: %ld, topic: %s, payload: %s]\n", cmd, id, topic, payload);
+    switch (cmd) {
+        case 's':
+            return subscribe(id, topic);
+        case 'u':
+            return unsubscribe(id, topic);
+        case 'p':
+            return publish(id, topic, payload);
+    }
+    return 0;
+}
+
 int parse_line(char* buffer, long id) {
     if (!is_valid_command(buffer[0])) {
-        return 0;
+        return USAGE;
     }
     // Is a valid command
 
-    if (buffer[0] == 'q') return 1;
+    if (buffer[0] == 'q') return EXIT;
     char cmd = buffer[0];
     buffer++;
 
     // skip spaces
-    if (buffer[0] != ' ') return 0;
+    if (buffer[0] != ' ') return USAGE;
     for ( ; *(buffer) == ' '; buffer++) ;
-    if (is_separator(buffer[0])) return 0;
+    if (is_separator(buffer[0])) return USAGE;
 
     char topic[100] = {0};
     int counter = 0;
@@ -54,11 +72,11 @@ int parse_line(char* buffer, long id) {
     }
     topic[counter] = '\0';
 
-    char payload[100];
+    char payload[100] = {};
     if (cmd == 'p') {
         // skip spaces
         for ( ; *(buffer) == ' '; buffer++) ;
-        if (is_separator(buffer[0])) return 0;
+        if (is_separator(buffer[0])) return USAGE;
 
         counter = 0;
         while (!is_separator(*(buffer))) {
@@ -67,18 +85,10 @@ int parse_line(char* buffer, long id) {
             counter++;
         }
         payload[counter] = '\0';
-
     }
 
-    switch (cmd) {
-        case 's':
-            return subscribe(id, topic);
-        case 'p':
-            return publish(id, topic, payload);
-        case 'u':
-            return unsubscribe(id, topic);
-    }
-    return 0;
+    execute_cmd(cmd, id, topic, payload);
+    return CONTINUE;
 }
 
 // Local broker deamon
@@ -92,30 +102,17 @@ int main(void) {
 
     int size = 200;
     char buffer[size];
-    int quit = 0;
+    int quit = CONTINUE;
 
-    while(!quit) {
+    while(quit != EXIT) {
         if (!fgets(buffer, size, stdin)) break;
 
         quit = parse_line(buffer, id);
+        if (quit == USAGE) {
+            print_usage();
+        }
     }
 
-    //
-    // int r = subscribe(id, "topic1");
-    // if (r < 0) {
-    //     perror("client: register");
-    // }
-    //
-    // r = subscribe(id, "topic1/topic2");
-    // if (r < 0) {
-    //     perror("client: register");
-    // }
-    //
-    // r = publish(id, "placeholder", "Esto es un mensaje de prueba");
-    // if (r < 0) {
-    //     perror("client: register");
-    // }
-    //
     unregister(id);
     log_printf("Shutting down client\n");
     return 0;

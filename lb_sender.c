@@ -18,32 +18,26 @@ void graceful_quit(int sig) {
 	quit = 1;
 }
 
-void handle_retrieve(struct msg_t msg) {
-    UNUSED(msg);
-    return;
-}
-
 void handle_message(socket_t* s, struct msg_t msg) {
-    printf("Received a message of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg.type), msg.payload);
+    log_printf("Received a message from local queue\n");
+    print_msg(msg);
     msg.local_id = msg.mtype;
-
-    if (msg.type == MSG_RETRIEVE) {
-        handle_retrieve(msg);
-        return;
-    }
 
     if (msg.type != MSG_REGISTER) {
         msg.global_id = get_global_id(msg.mtype);
     }
+
+    log_printf("Attempting to send to broker\n");
+    print_msg(msg);
     int r = SOCK_SEND(s, struct msg_t, msg);
     if (r < 0) {
-        perror("handle_message: sock_send");
+        log_perror("handle_message: sock_send");
     }
 }
 
 // Local broker deamon
 int main(void) {
-    printf("Starting local broker sender\n");
+    log_printf("Starting local broker sender\n");
 
     // Setting signal handler for graceful_quit
     struct sigaction sa = {0};
@@ -66,9 +60,10 @@ int main(void) {
     struct msg_t msg = {0};
     int r;
     while(!quit) {
+        log_printf("Waiting for messages in local queue\n");
         r = msgq_recv(msgid, &msg, sizeof(struct msg_t), 0);
         if (r < 0) {
-            perror("lb_sender: msgq_recv");
+            log_perror("lb_sender: msgq_recv");
             continue;
         }
         handle_message(s, msg);

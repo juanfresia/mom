@@ -20,27 +20,28 @@ void graceful_quit(int sig) {
 }
 
 int get_message(socket_t *s, struct msg_t *msg) {
-    printf("Attempt to get a message from broker\n");
+    log_printf("Listening for broker messages\n");
 
     int r = SOCK_RECV(s, struct msg_t, *msg);
     if (r < 0) {
-        perror("get_message: sock_recv");
+        log_perror("get_message: sock_recv");
         return -1;
     }
+
+    log_printf("Received a message\n");
+    print_msg(*msg);
 
     if (msg->type == MSG_NEW_ID) {
         set_local_id(msg->local_id, msg->global_id);
     }
-
     msg->mtype = msg->local_id;
 
-    printf("Received a message from broker of type [%s] and payload: %s\n", MSG_TYPE_TO_STRING(msg->type), msg->payload);
     return 0;
 }
 
 // Local broker deamon
 int main(void) {
-    printf("Starting local broker receiver\n");
+    log_printf("Starting local broker receiver\n");
 
     // Setting signal handler for graceful_quit
     struct sigaction sa = {0};
@@ -51,6 +52,12 @@ int main(void) {
     // Get queue of messages to send to clients
     int msgid = msgq_getmsg(LB_IPC_RECV_MQ);
     if (msgid < 0) {
+        _exit(-1);
+    }
+
+    // Get queue for publish
+    int pubid = msgq_getmsg(LB_IPC_PUB_MQ);
+    if (pubid < 0) {
         _exit(-1);
     }
 
@@ -66,8 +73,13 @@ int main(void) {
         if (get_message(s, &msg) < 0) {
             _exit(-1);
         }
-
-        r = msgq_send(msgid, &msg, sizeof(struct msg_t));
+        log_printf("Sendin received message to queue\n");
+        print_msg(msg);
+        if (msg.type == MSG_PUBLISH) {
+            r = msgq_send(pubid, &msg, sizeof(struct msg_t));
+        } else {
+            r = msgq_send(msgid, &msg, sizeof(struct msg_t));
+        }
         if (r < 0) {
             perror("lb_receiver: msgq_send");
             _exit(-1);

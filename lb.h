@@ -6,6 +6,7 @@
 
 #define LB_IPC_SEND_MQ 0
 #define LB_IPC_RECV_MQ 1
+#define LB_IPC_PUB_MQ 4
 
 #define B_IPC_IN_MQ 2
 #define B_IPC_OUT_MQ 3
@@ -55,7 +56,7 @@ struct msg_t {
 };
 
 void print_msg(struct msg_t msg) {
-    log_printf("(mtype: %ld, lid: %ld, gid: %ld, type: %s, topic: %s, payload: %s)",
+    log_printf("(mtype: %ld, lid: %ld, gid: %ld, type: %s, topic: %s, payload: %s)\n",
                msg.mtype, msg.local_id, msg.global_id, MSG_TYPE_TO_STRING(msg.type),
                msg.topic, msg.payload);
 }

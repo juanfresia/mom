@@ -127,16 +127,20 @@ int db_get_subscriptors(char *topic, long **id_list) {
     snprintf(topic_file, sizeof(topic_file), "%s/topics/%s/_subscribers", db_dir, topic);
     snprintf(command, sizeof(command), "cat %s", topic_file);
 
-    *id_list = (long*)malloc(sizeof(long) * 100);
-    for (int i = 0; i < 100; i++) (*id_list)[i] = 0;
+    long* tmp_list = (long*)malloc(sizeof(long) * 100);
+    for (int i = 0; i < 100; i++) tmp_list[i] = 0;
     FILE* out = popen(command, "r");
     int r;
     int i = 0;
     do {
-        r = fscanf(out, "%ld\n", &(*id_list)[i]);
+        r = fscanf(out, "%ld\n", &(tmp_list[i]));
         if (r != EOF) i++;
     } while(r != EOF);
     pclose(out);
+
+    log_printf("Is this ok?\n");
+
+    *id_list = tmp_list;
     return i;
 }
 

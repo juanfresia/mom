@@ -46,6 +46,14 @@ int main(void) {
         _exit(-1);
     }
 
+    // Queue for received messages
+    int pubq = msgq_create(LB_IPC_PUB_MQ);
+    if (pubq < 0) {
+        msgq_destroy(sendq);
+        msgq_destroy(recvq);
+        _exit(-1);
+    }
+
     // Attempt to connect to the broker server
     socket_t* s = socket_create(SOCK_ACTIVE);
     if (!s) {
@@ -102,5 +110,6 @@ int main(void) {
     socket_destroy(s);
     msgq_destroy(sendq);
     msgq_destroy(recvq);
+    msgq_destroy(pubq);
     return 0;
 }

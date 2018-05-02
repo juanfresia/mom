@@ -13,6 +13,7 @@
 extern char *program_invocation_short_name;
 
 void log_printf(char* msg, ... ) {
+    setbuf(stdout, NULL);
     int pid = getpid();
     va_list args;
     va_start(args, msg);
