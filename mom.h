@@ -38,7 +38,7 @@ int publish(int id, char* topic, char* message);
  * It will block until a message is received and return MOM_SUCCESS.
  * If an error occurs, MOM_ERROR is returned and msg_store is pointed to null.
  */
-int retrieve(int id, char* topic, char** msg_store);
+int retrieve(int id, char** msg_store);
 
 /*
  * Unregister client with id _id_ from the mq.

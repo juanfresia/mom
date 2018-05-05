@@ -54,7 +54,7 @@ int execute_cmd(char cmd, long id, char* topic, char* payload) {
         case 'p':
             return publish(id, topic, payload);
         case 'r':
-            retrieve(id, topic, &retrieve_payload);
+            retrieve(id, &retrieve_payload);
             log_printf("Received %s\n", retrieve_payload);
             free(retrieve_payload);
             return 0;

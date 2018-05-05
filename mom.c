@@ -43,7 +43,32 @@ int init_msgq() {
     return MOM_SUCCESS;
 }
 
-// Implementation of MOM API
+/*
+ * Sends a message to the local broker, and expects a response.
+ * The response overwrites in the sent message.
+ * On error MOM_ERROR is returned, otherwise it returns MOM_SUCCESS
+ */
+int send_msg_expect_response(struct msg_t *msg) {
+    log_printf("Sending message to local broker\n");
+    print_msg(*msg);
+    if (msgq_send(msgid_snd, msg, sizeof(*msg)) < 0) {
+        return MOM_ERROR;
+    }
+
+    log_printf("Waiting for ack...\n");
+    if (msgq_recv(msgid_rcv, msg, sizeof(*msg), msg->mtype) < 0) {
+        return MOM_ERROR;
+    }
+    log_printf("Received ack from local broker\n");
+    print_msg(*msg);
+    return MOM_SUCCESS;
+}
+
+/*
+ * Implementation of MOM API
+ */
+
+
 int register_client() {
     // Initialize IPC message queues
     if (init_msgq() < 0) {
@@ -54,53 +79,35 @@ int register_client() {
     struct msg_t msg = {0};
     msg.mtype = getpid();
     msg.type = MSG_REGISTER;
-
-    log_printf("Sending register\n");
-    print_msg(msg);
-    if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
+    if (send_msg_expect_response(&msg) == MOM_ERROR) {
         return MOM_ERROR;
     }
 
-    log_printf("Waiting for register ack\n");
-    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
-        return MOM_ERROR;
-    }
-    log_printf("Received register ack\n");
-    print_msg(msg);
-
-    // Assert message type is a correct ACK
+    // Assert message type is a new ID
     if (msg.type != MSG_NEW_ID) {
         return MOM_ERROR;
     }
 
-    // Return pid as id (TODO: change reading payload)
+    // Return asigned local ID
     return msg.local_id;
 }
 
 int subscribe(int id, char* topic) {
-    // Send subscription message
+    // Build subscription message
     struct msg_t msg = {0};
     msg.mtype = id;
     msg.type = MSG_SUBSCRIBE;
 
     if (strlen(topic) >= MAX_TOPIC_LENGTH) {
+        log_printf("subscribe: topic too long");
         return MOM_ERROR;
     }
     strcpy(msg.topic, topic);
 
-    log_printf("Sending subscription\n");
-    print_msg(msg);
-    if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
+    // Sending message
+    if (send_msg_expect_response(&msg) == MOM_ERROR) {
         return MOM_ERROR;
     }
-
-    log_printf("Waiting for subscription ack\n");
-    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
-        return MOM_ERROR;
-    }
-
-    log_printf("Received subscription ack\n");
-    print_msg(msg);
 
     // Assert message type is a correct ACK
     if (msg.type != MSG_ACK_OK) {
@@ -117,23 +124,15 @@ int unsubscribe(int id, char* topic) {
     msg.type = MSG_UNSUBSCRIBE;
 
     if (strlen(topic) >= MAX_TOPIC_LENGTH) {
+        log_printf("unsubscribe: topic too long");
         return MOM_ERROR;
     }
     strcpy(msg.topic, topic);
 
-    log_printf("Sending unsubscription\n");
-    print_msg(msg);
-    if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
+    // Sending message
+    if (send_msg_expect_response(&msg) == MOM_ERROR) {
         return MOM_ERROR;
     }
-
-    log_printf("Waiting for unsubscription ack\n");
-    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
-        return MOM_ERROR;
-    }
-
-    log_printf("Received unsubscription ack\n");
-    print_msg(msg);
 
     // Assert message type is a correct ACK
     if (msg.type != MSG_ACK_OK) {
@@ -150,27 +149,21 @@ int publish(int id, char* topic, char* message) {
     msg.type = MSG_PUBLISH;
 
     if (strlen(topic) >= MAX_TOPIC_LENGTH) {
+        log_printf("publish: topic too long");
         return MOM_ERROR;
     }
     strcpy(msg.topic, topic);
 
     if (strlen(message) >= MAX_PAYLOAD) {
+        log_printf("publish: payload too long");
         return MOM_ERROR;
     }
     strcpy(msg.payload, message);
 
-    log_printf("Sending publish\n");
-    print_msg(msg);
-    if (msgq_send(msgid_snd, &msg, sizeof(msg)) < 0) {
+    // Sending message
+    if (send_msg_expect_response(&msg) == MOM_ERROR) {
         return MOM_ERROR;
     }
-
-    log_printf("Waiting for publish ack\n");
-    if (msgq_recv(msgid_rcv, &msg, sizeof(msg), msg.mtype) < 0) {
-        return MOM_ERROR;
-    }
-    log_printf("Received publish ack\n");
-    print_msg(msg);
 
     // Assert message type is a correct ACK
     if (msg.type != MSG_ACK_OK) {
@@ -180,7 +173,7 @@ int publish(int id, char* topic, char* message) {
     return MOM_SUCCESS;
 }
 
-int retrieve(int id, char* topic, char** msg_store) {
+int retrieve(int id, char** msg_store) {
     struct msg_t msg = {0};
 
     log_printf("Attemt to retreive a message\n");
@@ -193,7 +186,6 @@ int retrieve(int id, char* topic, char** msg_store) {
     *msg_store = malloc(sizeof(char) * (strlen(msg.payload) + 1));
     strcpy(*msg_store, msg.payload);
 
-    UNUSED(topic);
     return MOM_SUCCESS;
 }
 
