@@ -25,7 +25,7 @@ int get_message(socket_t *s, struct msg_t *msg) {
     int r = SOCK_RECV(s, struct msg_t, *msg);
     if (r < 0) {
         log_perror("get_message: sock_recv");
-        return -1;
+        _exit(-1);
     }
 
     log_printf("Received a message\n");

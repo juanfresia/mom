@@ -32,6 +32,7 @@ void handle_message(socket_t* s, struct msg_t msg) {
     int r = SOCK_SEND(s, struct msg_t, msg);
     if (r < 0) {
         log_perror("handle_message: sock_send");
+        _exit(-1);
     }
 }
 
