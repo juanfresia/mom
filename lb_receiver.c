@@ -31,6 +31,8 @@ int get_message(socket_t *s, struct msg_t *msg) {
     log_printf("Received a message\n");
     print_msg(*msg);
 
+    // If it is a response from a register, use the local_id
+    // to set the mapping
     if (msg->type == MSG_NEW_ID) {
         set_local_id(msg->local_id, msg->global_id);
     }
@@ -75,6 +77,7 @@ int main(void) {
         }
         log_printf("Sendin received message to queue\n");
         print_msg(msg);
+        // Publishes are sent to another queue
         if (msg.type == MSG_PUBLISH) {
             r = msgq_send(pubid, &msg, sizeof(struct msg_t));
         } else {

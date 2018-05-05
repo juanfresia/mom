@@ -21,6 +21,10 @@ void graceful_quit(int sig) {
 void handle_message(socket_t* s, struct msg_t msg) {
     log_printf("Received a message from local queue\n");
     print_msg(msg);
+
+    // msg.mtype is the connection ID except on register
+    // save it so it is posible to know to whom return it
+    // in case of a register
     msg.local_id = msg.mtype;
 
     if (msg.type != MSG_REGISTER) {
