@@ -7,9 +7,16 @@
 #define EXIT 1
 #define CONTINUE 2
 
+#define BUFFER_SIZE 100
+#define LINE_SIZE 500
+
 void print_usage() {
     // log_printf("And here I would put my usage message... if only I had one\n");
-    log_printf("Wrong command\n");
+    log_printf("Usage:\n\
+                \tp <topic> <msg>\t // Publishes msg to a topic\n\
+                \tr              \t // Reads a message (blocking)\n\
+                \t[s|u] <topic>  \t // Suscribe/unsubcribe to a topic\n\
+                \tq              \t // Quits CLI\n");
 }
 
 int is_valid_command(char c) {
@@ -59,22 +66,22 @@ int parse_line(char* buffer, long id) {
     if (!is_valid_command(buffer[0])) {
         return USAGE;
     }
-    // Is a valid command
 
+    // If it is not exit, keep command and continue parsing
     if (buffer[0] == 'q') return EXIT;
     char cmd = buffer[0];
     buffer++;
 
-    char topic[100] = {0};
+    // If it is not a read command, a topic is needed
+    char topic[BUFFER_SIZE] = {0};
     int counter = 0;
-
     if (cmd != 'r') {
         // skip spaces
         if (buffer[0] != ' ') return USAGE;
         for ( ; *(buffer) == ' '; buffer++) ;
         if (is_separator(buffer[0])) return USAGE;
 
-        while (!is_separator(*(buffer))) {
+        while (!is_separator(*buffer) && counter < BUFFER_SIZE-1) {
             topic[counter] = *buffer;
             buffer++;
             counter++;
@@ -82,15 +89,15 @@ int parse_line(char* buffer, long id) {
         topic[counter] = '\0';
     }
 
-
-    char payload[100] = {0};
+    // If it is a publish command, a payload is needed
+    char payload[BUFFER_SIZE] = {0};
     if (cmd == 'p') {
         // skip spaces
         for ( ; *(buffer) == ' '; buffer++) ;
         if (is_separator(buffer[0])) return USAGE;
 
         counter = 0;
-        while (*(buffer) != '\n' && counter < 98) {
+        while (*(buffer) != '\n' && counter < BUFFER_SIZE-1) {
             payload[counter] = *buffer;
             buffer++;
             counter++;
@@ -111,7 +118,7 @@ int main(void) {
         log_perror("register");
     }
 
-    int size = 200;
+    int size = LINE_SIZE;
     char buffer[size];
     int quit = CONTINUE;
 
