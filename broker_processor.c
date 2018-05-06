@@ -18,38 +18,20 @@ void graceful_quit(int sig) {
 	quit = 1;
 }
 
-struct msg_t handle_message(struct msg_t req) {
-    int outq = msgq_getmsg(B_IPC_OUT_MQ);
-    if (outq < 0) {
-        log_perror("handle_message: outq: something went wrong");
-        _exit(-1);
-    }
-
+/*
+ * Handles a request message req and returns a response.
+ * As it may need to send multiple messages (e.g. in a publish)
+ * the second parameter is the output queue.
+ */
+struct msg_t handle_message(struct msg_t req, int outq) {
     long *id_list;
-    char **topics;
+
     if (req.type == MSG_SUBSCRIBE) {
         log_printf("I received a subscribe\n");
         if (db_subscribe(req.global_id, req.topic) < 0) {
             req.type = MSG_ACK_ERROR;
             return req;
         }
-
-        int count = db_get_subscriptors(req.topic, &id_list);
-        log_printf("Subscribers list:\n");
-        while (count > 0) {
-            log_printf("\t%ld\n", id_list[count-1]);
-            count--;
-        }
-
-        count = db_get_subscriptions(req.global_id, &topics);
-        log_printf("Subscriptions:\n");
-        while(count > 0) {
-            log_printf("\t%s\n", topics[count-1]);
-            count--;
-        }
-
-        db_free_topic_list(topics);
-        free(id_list);
     } else if (req.type == MSG_REGISTER) {
         log_printf("I received a register\n");
         req.global_id = db_next_id();
@@ -57,13 +39,12 @@ struct msg_t handle_message(struct msg_t req) {
             req.global_id = 0;
             req.type = MSG_ACK_ERROR;
             return req;
-        } else {
-            if (db_register_exit(req.global_id, req.mtype) < 0) {
-                log_perror("reginstering_exit");
-            }
-            req.type = MSG_NEW_ID;
-            return req;
         }
+        if (db_register_exit(req.global_id, req.mtype) < 0) {
+            log_perror("registering exit");
+        }
+        req.type = MSG_NEW_ID;
+        return req;
     } else if (req.type == MSG_PUBLISH) {
         log_printf("I received a publish\n");
         int count = db_get_subscriptors(req.topic, &id_list);
@@ -76,6 +57,10 @@ struct msg_t handle_message(struct msg_t req) {
             new_msg.mtype = db_get_exit(new_msg.global_id);
             if (new_msg.mtype <= 0) {
                 log_printf("error finding exit for publish");
+                continue;
+            }
+            if (new_msg.global_id == req.global_id) {
+                // Do not send back to publisher
                 continue;
             }
             log_printf("\tnow sending to %ld\n", id_list[count]);
@@ -100,7 +85,6 @@ struct msg_t handle_message(struct msg_t req) {
         }
     }
     req.type = MSG_ACK_OK;
-
     return req;
 }
 
@@ -137,7 +121,7 @@ int main(void) {
         log_printf("Got a new request\n");
         print_msg(req);
 
-        resp = handle_message(req);
+        resp = handle_message(req, outq);
 
         log_printf("Attempting to send response\n");
         print_msg(resp);
