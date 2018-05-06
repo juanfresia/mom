@@ -13,8 +13,10 @@
 #include "proc.h"
 #include "server.h"
 
-#define SERVER_IP "127.0.0.1"
-#define SERVER_PORT "12345"
+#define DEFAULT_IP "127.0.0.1"
+#define DEFAULT_PORT "12345"
+#define ENV_LISTEN_IP "LISTEN_IP"
+#define ENV_LISTEN_PORT "LISTEN_PORT"
 
 void handler(socket_t* s) {
     static int connection_id = 1;
@@ -80,8 +82,15 @@ int main (void) {
         _exit(-1);
     }
 
+    // Retrieve server ip and port form environment
+    char* ip = getenv(ENV_LISTEN_IP);
+    if (!ip) ip = DEFAULT_IP;
+
+    char* port = getenv(ENV_LISTEN_PORT);
+    if (!port) port = DEFAULT_PORT;
+
     // Run server accepting connections
-    run_server(SERVER_IP, SERVER_PORT, handler, SERVER_ITERATIVE);
+    run_server(ip, port, handler, SERVER_ITERATIVE);
 
     // Server gracefully exited
     // Gracefully kill children
