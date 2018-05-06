@@ -173,7 +173,7 @@ int publish(int id, char* topic, char* message) {
     return MOM_SUCCESS;
 }
 
-int retrieve(int id, char** msg_store) {
+int retrieve(int id, char** topic_store, char** msg_store) {
     struct msg_t msg = {0};
 
     log_printf("Attemt to retreive a message\n");
@@ -185,6 +185,9 @@ int retrieve(int id, char** msg_store) {
 
     *msg_store = malloc(sizeof(char) * (strlen(msg.payload) + 1));
     strcpy(*msg_store, msg.payload);
+
+    *topic_store = malloc(sizeof(char) * (strlen(msg.topic) + 1));
+    strcpy(*topic_store, msg.topic);
 
     return MOM_SUCCESS;
 }

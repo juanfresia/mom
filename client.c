@@ -46,6 +46,7 @@ int is_separator(char c) {
 int execute_cmd(char cmd, long id, char* topic, char* payload) {
     log_printf("Going to execute %c, with [id: %ld, topic: %s, payload: %s]\n", cmd, id, topic, payload);
     char* retrieve_payload;
+    char* retrieve_topic;
     switch (cmd) {
         case 's':
             return subscribe(id, topic);
@@ -54,9 +55,10 @@ int execute_cmd(char cmd, long id, char* topic, char* payload) {
         case 'p':
             return publish(id, topic, payload);
         case 'r':
-            retrieve(id, &retrieve_payload);
-            log_printf("Received %s\n", retrieve_payload);
+            retrieve(id, &retrieve_topic, &retrieve_payload);
+            log_printf("Message from topic %s: %s\n", retrieve_topic, retrieve_payload);
             free(retrieve_payload);
+            free(retrieve_topic);
             return 0;
     }
     return 0;
@@ -117,6 +119,7 @@ int main(void) {
     if (id < 0) {
         log_perror("register");
     }
+    log_printf("Got local id: %ld\n", id);
 
     int size = LINE_SIZE;
     char buffer[size];
