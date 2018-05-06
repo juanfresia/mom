@@ -28,7 +28,7 @@ void handle_message(socket_t* s, struct msg_t msg) {
     msg.local_id = msg.mtype;
 
     if (msg.type != MSG_REGISTER) {
-        msg.global_id = get_global_id(msg.mtype);
+        msg.global_id = db_get_global_id(msg.mtype);
     }
 
     log_printf("Attempting to send to broker\n");

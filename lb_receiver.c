@@ -32,11 +32,11 @@ int get_message(socket_t *s, struct msg_t *msg) {
     print_msg(*msg);
 
     // If it is a response from a register, use the local_id
-    // to set the mapping
+    // to set the mapping.
     if (msg->type == MSG_NEW_ID) {
-        set_local_id(msg->local_id, msg->global_id);
+        db_set_local_id(msg->local_id, msg->global_id);
     }
-    msg->mtype = get_local_id(msg->global_id);
+    msg->mtype = db_get_local_id(msg->global_id);
 
     return 0;
 }

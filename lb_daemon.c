@@ -70,7 +70,7 @@ int main(void) {
     sigaction(SIGINT, &sa, NULL);
 
     // Init db and IPC queues
-    init_directories();
+    db_init();
     init_queues();
 
     // Retrieve broker ip and port form environment
@@ -141,5 +141,6 @@ int main(void) {
     log_printf("Shutting down daemon\n");
     socket_destroy(s);
     clean_queues();
+    db_close();
     return 0;
 }
