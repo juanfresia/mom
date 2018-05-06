@@ -67,7 +67,7 @@ int db_subscribe(long id, char *topic) {
     }
 
     // Update subscribes
-    snprintf(command, sizeof(command), "grep -q '^%1$ld' %2$s || echo '%1$ld' >> %2$s", id, topic_file);
+    snprintf(command, sizeof(command), "grep -q '^%1$ld$' %2$s || echo '%1$ld' >> %2$s", id, topic_file);
     log_printf("\t+ %s\n", command);
     r = system(command);
     if (r < 0) {
@@ -75,7 +75,7 @@ int db_subscribe(long id, char *topic) {
     }
 
     // Update subscribes
-    snprintf(command, sizeof(command), "grep -q '^%1$s' %2$s || echo '%1$s' >> %2$s", topic, client_file);
+    snprintf(command, sizeof(command), "grep -q '^%1$s$' %2$s || echo '%1$s' >> %2$s", topic, client_file);
     log_printf("\t+ %s\n", command);
     r = system(command);
     if (r < 0) {
@@ -181,7 +181,13 @@ int db_unsubscribe(long id, char *topic) {
     snprintf(client_file, sizeof(client_file), "%s/clients/%ld.subs", db_dir, id);
 
     // Delete client from topic
-    snprintf(command, sizeof(command), "sed -i '/^%1$ld/d' %2$s", id, topic_file);
+    // Note: using \# at the start of the sed to change delimiter
+    // usually it would be sed -i '/pattern/d' file
+    // but the delimiter (in this case /) can be change to whatever character
+    // we want by using a backslash and that character at the begining.
+    // This results in sed -i '\#patter#d' file, or in this case
+    // sed -i "\ pattern d"
+    snprintf(command, sizeof(command), "sed -i '\\ ^%1$ld$ d' %2$s", id, topic_file);
     log_printf("\t+ %s\n", command);
     int r = system(command);
     if (r < 0) {
@@ -189,7 +195,7 @@ int db_unsubscribe(long id, char *topic) {
     }
 
     // Delete topic from client
-    snprintf(command, sizeof(command), "sed -i '/^%1$s/d' %2$s", topic, client_file);
+    snprintf(command, sizeof(command), "sed -i '\\ ^%1$s$ d' %2$s", topic, client_file);
     log_printf("\t+ %s\n", command);
     r = system(command);
     if (r < 0) {
