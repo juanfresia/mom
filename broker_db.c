@@ -14,10 +14,8 @@
 #define DEFAULT_DB_DIR "broker_data"
 #define ENV_DB_DIR "DB_DIR"
 
-static char *db_dir;
-
 int db_init() {
-    db_dir = getenv(ENV_DB_DIR);
+    char* db_dir = getenv(ENV_DB_DIR);
     if (!db_dir) db_dir = DEFAULT_DB_DIR;
 
     char command[1024];
@@ -34,6 +32,9 @@ int db_init() {
 }
 
 long db_next_id() {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
+
     char command[1024];
 
     // Make directories
@@ -50,6 +51,8 @@ long db_next_id() {
 }
 
 int db_subscribe(long id, char *topic) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[1024];
 
     char topic_dir[100];
@@ -89,6 +92,8 @@ int db_subscribe(long id, char *topic) {
 }
 
 int db_register_exit(long global_id, long exit_mtype) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[1024];
 
     // Create file with exit pid
@@ -98,6 +103,8 @@ int db_register_exit(long global_id, long exit_mtype) {
 }
 
 long db_get_exit(long global_id) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[1024];
 
     snprintf(command, sizeof(command), "cat %s/clients/%ld.exit", db_dir, global_id);
@@ -112,6 +119,8 @@ long db_get_exit(long global_id) {
 }
 
 int db_get_subscriptors(char *topic, long **id_list) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[1024];
     char topic_file[100];
     snprintf(topic_file, sizeof(topic_file), "%s/topics/%s/_subscribers", db_dir, topic);
@@ -135,6 +144,8 @@ int db_get_subscriptors(char *topic, long **id_list) {
 }
 
 int db_get_subscriptions(long id, char ***topic_list) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[1024];
     char client_file[100];
     snprintf(client_file, sizeof(client_file), "%s/clients/%ld.subs", db_dir, id);
@@ -170,6 +181,8 @@ void db_free_topic_list(char** topic_list) {
 }
 
 int db_unsubscribe(long id, char *topic) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[1024];
 
     char topic_file[100];
@@ -204,6 +217,8 @@ int db_unsubscribe(long id, char *topic) {
 }
 
 int db_unregister(long id) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[1024];
     char client_prefix[100];
 

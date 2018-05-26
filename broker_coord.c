@@ -13,8 +13,6 @@
 #define ENV_BROKER_NEXT_IP "NEXT_IP"
 #define ENV_BROKER_NEXT_PORT "NEXT_PORT"
 
-#define ENV_BROKER_ID "BROKER_ID"
-
 #define ENV_BROKER_IP "BROKER_IP"
 #define ENV_BROKER_PORT "BROKER_PEER_PORT"
 
@@ -88,9 +86,6 @@ void spawn_coord_entrance() {
     sprintf(buffer, "%d", B_IPC_COORD_MQ);
     setenv(ENV_QUEUE_ID, buffer, 1);
 
-    sprintf(buffer, "%d", connection_id);
-    setenv(ENV_CONNECTION_ID, buffer, 1);
-
     // Spawn broker entrance and exit for new connection
     int pid = fork();
     if (pid < 0) {
@@ -133,9 +128,6 @@ void spawn_coord_exit() {
     sprintf(buffer, "%d", B_IPC_OUT_MQ);
     setenv(ENV_QUEUE_ID, buffer, 1);
 
-    sprintf(buffer, "%d", connection_id);
-    setenv(ENV_CONNECTION_ID, buffer, 1);
-
     // Spawn exit
     int pid = fork();
     if (pid < 0) {
@@ -150,19 +142,8 @@ void spawn_coord_exit() {
 void coordinate() {
     log_printf("Coordinator %d: entered working loop\n", broker_id);
 
-    struct msg_t req;
-    int r;
-    req.mtype = connection_id;
-    req.local_id = broker_id;
-    req.type = MSG_CONTROL;
-    if (broker_id == MASTER_ID) {
-        r = msgq_send(outq, &req, sizeof(struct msg_t));
-        if (r < 0) {
-            log_perror("broker_processor: msgq_send");
-        }
-    }
-
     // Main work loop
+    struct msg_t req;
     while(!quit) {
         log_printf("Waiting for messages to process\n");
         int r = msgq_recv(coorq, &req, sizeof(struct msg_t), 0);
@@ -173,7 +154,15 @@ void coordinate() {
         log_printf("Got a new request\n");
         print_msg(req);
 
-        sleep(2);
+        // If the message completed a cicle, remove it from the ring
+        if (req.local_id == broker_id) {
+            continue;
+        } else if (req.type == MSG_PUBLISH) {
+            r = msgq_send(inq, &req, sizeof(struct msg_t));
+            if (r < 0) {
+                log_perror("broker_coordinator: msgq_send replicating publish");
+            }
+        }
 
         r = msgq_send(outq, &req, sizeof(struct msg_t));
         if (r < 0) {
@@ -222,6 +211,10 @@ int main(void) {
     } else {
         sscanf(broker_id_str, "%d", &broker_id);
     }
+
+    char buffer[BUFFER_LEN];
+    sprintf(buffer, "%d", connection_id);
+    setenv(ENV_CONNECTION_ID, buffer, 1);
 
     // Spawn receiver and sender processes.
     if (broker_id == MASTER_ID) {

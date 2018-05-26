@@ -11,6 +11,7 @@
 
 #define UNUSED(x) (void)(x)
 
+static int broker_id;
 static int quit = 0;
 
 void graceful_quit(int sig) {
@@ -73,6 +74,20 @@ struct msg_t handle_message(struct msg_t req, int outq) {
         }
         log_printf("Finish sending\n");
         free(id_list);
+
+        // If the publish came from a client and not a ring messages
+        // TODO: define constant
+        if (req.mtype != 1) {
+            new_msg = req;
+            new_msg.local_id = broker_id;
+            new_msg.mtype = 1;
+            log_printf("Sending publish to coordination queue\n");
+            print_msg(new_msg);
+            int r = msgq_send(outq, &new_msg, sizeof(struct msg_t));
+            if (r < 0) {
+                log_perror("broker_processor: msgq_send");
+            }
+        }
     } else if (req.type == MSG_UNSUBSCRIBE) {
         log_printf("I received an unsubscribe\n");
         if (db_unsubscribe(req.global_id, req.topic) < 0) {
@@ -106,6 +121,16 @@ int main(void) {
     if (outq < 0) {
         msgq_destroy(inq);
         _exit(-1);
+    }
+    
+    // Retrieve broker id
+    broker_id = 1;
+    char* broker_id_str = getenv(ENV_BROKER_ID);
+    if (!broker_id_str) {
+        log_perror("BROKER_ID is not defined");
+        broker_id = 0;
+    } else {
+        sscanf(broker_id_str, "%d", &broker_id);
     }
 
     // Main work loop

@@ -10,7 +10,8 @@
 #include <sys/types.h>
 
 // TODO: make this customizable
-#define KEY_PATH "./msgqueue.h"
+#define ENV_KEY_PATH "KEY_PATH"
+#define DEFAULT_KEY_PATH "./msgqueue.h"
 #define DEFAULT_PERM 0644
 
 /*
@@ -18,7 +19,10 @@
  * If the queue exists, it fails and returns -1.
  */
 int msgq_create(int id) {
-    key_t key = ftok(KEY_PATH, id);
+    char* key_path = getenv(ENV_KEY_PATH);
+    if (!key_path) key_path = DEFAULT_KEY_PATH;
+
+    key_t key = ftok(key_path, id);
     if (key < 0) {
         perror("msgq_create: ftok");
         return key;
@@ -36,7 +40,10 @@ int msgq_create(int id) {
  * If it does not exists, an error is returned.
  */
 int msgq_getmsg(int id) {
-    key_t key = ftok(KEY_PATH, id);
+    char* key_path = getenv(ENV_KEY_PATH);
+    if (!key_path) key_path = DEFAULT_KEY_PATH;
+
+    key_t key = ftok(key_path, id);
     if (key < 0) {
         perror("msgq_getmsg: ftok");
         return key;
