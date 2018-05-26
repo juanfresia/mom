@@ -29,7 +29,10 @@ int main(void) {
 	sigaction(SIGINT, &sa, NULL);
 
     // Get IPC queue
-    int inq = msgq_getmsg(B_IPC_IN_MQ);
+    int queue_id;
+    sscanf(getenv(ENV_QUEUE_ID), "%d", &queue_id);
+    log_printf("Using queue_id %d\n", queue_id);
+    int inq = msgq_getmsg(queue_id);
     if (inq < 0) {
         log_perror("broker_entrance: msgq_getmsg");
         _exit(-1);

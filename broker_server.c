@@ -15,11 +15,13 @@
 
 #define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT "12345"
+
 #define ENV_LISTEN_IP "LISTEN_IP"
 #define ENV_LISTEN_PORT "LISTEN_PORT"
 
 void handler(socket_t* s) {
-    static int connection_id = 1;
+    // Connection id 1 is reserved for coordinator
+    static int connection_id = 2;
     log_printf("A connection has arrived\n");
 
     // Set environment variable for socket FD
@@ -32,6 +34,10 @@ void handler(socket_t* s) {
     setenv(ENV_CONNECTION_ID, buffer, 1);
     connection_id++;
 
+    // Set envoronment variable for entrance queue
+    sprintf(buffer, "%d", B_IPC_IN_MQ);
+    setenv(ENV_QUEUE_ID, buffer, 1);
+
     // Spawn broker entrance and exit for new connection
     // TODO: cleanup
     int pid = fork();
@@ -43,6 +49,11 @@ void handler(socket_t* s) {
         return;
     }
 
+    // Set envoronment variable for exit queue
+    sprintf(buffer, "%d", B_IPC_OUT_MQ);
+    setenv(ENV_QUEUE_ID, buffer, 1);
+
+    // Spawn exit
     pid = fork();
     if (pid < 0) {
         log_perror("broker_server: exit fork");
@@ -69,6 +80,23 @@ int main (void) {
     int outq = msgq_create(B_IPC_OUT_MQ);
     if (outq < 0) {
         msgq_destroy(inq);
+        _exit(-1);
+    }
+
+    int coordq = msgq_create(B_IPC_COORD_MQ);
+    if (coordq < 0) {
+        msgq_destroy(inq);
+        msgq_destroy(outq);
+        _exit(-1);
+    }
+
+    // Launch process for broker coordinator
+    int coord_pid = fork();
+    if (coord_pid < 0) {
+        log_perror("broker_server: coordinator fork");
+    } else if (coord_pid == 0) {
+        execl("broker_coord", "broker_coord", NULL);
+        log_perror("broker_server: coordinator execl");
         _exit(-1);
     }
 
@@ -102,6 +130,7 @@ int main (void) {
     // Free resources
     msgq_destroy(inq);
     msgq_destroy(outq);
+    msgq_destroy(coordq);
 
     // Close db
     db_close();

@@ -29,11 +29,14 @@ int main(void) {
     sigaction(SIGINT, &sa, NULL);
 
     // Get IPC queue
-    int outq = msgq_getmsg(B_IPC_OUT_MQ);
+    int queue_id;
+    sscanf(getenv(ENV_QUEUE_ID), "%d", &queue_id);
+    int outq = msgq_getmsg(queue_id);
     if (outq < 0) {
         log_perror("broker_exit: msgq_getmsg");
         _exit(-1);
     }
+    log_printf("Using queue_id %d\n", queue_id);
 
     // Retrieve socket fd
     int sock_fd;

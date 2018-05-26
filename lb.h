@@ -11,6 +11,8 @@
 #define B_IPC_IN_MQ 2
 #define B_IPC_OUT_MQ 3
 
+#define B_IPC_COORD_MQ 5
+
 #define MAX_PAYLOAD 1024
 #define MAX_TOPIC_LENGTH 100
 
@@ -18,6 +20,10 @@
 
 #define ENV_SOCKET_FD "SOCKET_FD"
 #define ENV_CONNECTION_ID "CONNECTION_ID"
+
+#define ENV_QUEUE_ID "QUEUE_ID"
+
+#define MASTER_ID 1
 
 enum mom_msg_type {
     MSG_REGISTER = 0,
@@ -29,6 +35,7 @@ enum mom_msg_type {
     MSG_NEW_ID,
     MSG_ACK_OK,
     MSG_ACK_ERROR,
+    MSG_CONTROL,
     MSG_ENUM_LENGTH
 };
 const char* msg_type_string[MSG_ENUM_LENGTH] = {
@@ -40,7 +47,8 @@ const char* msg_type_string[MSG_ENUM_LENGTH] = {
     "unregister",
     "new_id",
     "ack_ok",
-    "ack_error"
+    "ack_error",
+    "control_msg"
 };
 
 #define MSG_TYPE_TO_STRING(type) (msg_type_string[type])
