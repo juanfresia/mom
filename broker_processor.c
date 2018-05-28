@@ -60,8 +60,11 @@ struct msg_t handle_message(struct msg_t req, int outq) {
                 log_printf("error finding exit for publish");
                 continue;
             }
-            if (new_msg.global_id == req.global_id) {
+
+            if (new_msg.global_id == req.global_id && req.mtype != 1) {
                 // Do not send back to publisher
+                // if mtype == 1, then is from another broker
+                // it could have the same id
                 continue;
             }
             log_printf("\tnow sending to %ld\n", id_list[count]);
@@ -122,7 +125,7 @@ int main(void) {
         msgq_destroy(inq);
         _exit(-1);
     }
-    
+
     // Retrieve broker id
     broker_id = 1;
     char* broker_id_str = getenv(ENV_BROKER_ID);
@@ -147,6 +150,7 @@ int main(void) {
         print_msg(req);
 
         resp = handle_message(req, outq);
+        if (req.mtype == 1) continue;
 
         log_printf("Attempting to send response\n");
         print_msg(resp);

@@ -18,7 +18,8 @@
 
 #define CMD_SIZE 1024
 
-char* db_dir = "lb_data";
+#define DEFAULT_DB_DIR "lb_data"
+#define ENV_DB_DIR "DB_DIR"
 
 /*
  * Initialize local directories where to store the id mappings.
@@ -26,6 +27,8 @@ char* db_dir = "lb_data";
  * otherwise the value is defaulted to LB_DATABASE_DIR_DEFAULT.
  */
 int db_init() {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[CMD_SIZE];
     snprintf(command, sizeof(command), "mkdir -p %s %s/global %s/local", db_dir, db_dir, db_dir);
     log_printf("+ %s\n", command);
@@ -39,6 +42,8 @@ int db_init() {
 }
 
 int db_set_local_id(long local_id, long global_id) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[CMD_SIZE];
     snprintf(command, sizeof(command), "echo '%lu' > %s/local/%lu", local_id, db_dir, global_id);
     log_printf("+ %s\n", command);
@@ -56,6 +61,8 @@ int db_set_local_id(long local_id, long global_id) {
 }
 
 long db_get_local_id(long global_id) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[CMD_SIZE];
     snprintf(command, sizeof(command), "cat %s/local/%lu", db_dir, global_id);
     log_printf("+ %s\n", command);
@@ -74,6 +81,8 @@ long db_get_local_id(long global_id) {
 }
 
 int db_get_global_id(long local_id) {
+    char* db_dir = getenv(ENV_DB_DIR);
+    if (!db_dir) db_dir = DEFAULT_DB_DIR;
     char command[CMD_SIZE];
     snprintf(command, sizeof(command), "cat %s/global/%lu", db_dir, local_id);
     log_printf("+ %s\n", command);
